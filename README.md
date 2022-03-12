@@ -7,14 +7,11 @@
 <!-- badges: end -->
 
 The primary goal of DEBBI (short for ‘Differential Evolution-based
-Bayesian Inference’) is to provide efficient access to and enable
+Bayesian Inference’) is to provide access to and enable
 reproducible use of Bayesian inference algorithms such as Differential
 Evolution Markov Chain Monte Carlo, Differential Evolution Variation
 Inference, and Differential Evolution maximum a posteriori estimation.
-The second goal of this package is to be compatible with likelihood-free
-Bayesian inference methodologies that use approximations of the
-likelihood function such as probability density approximation,
-kernel-based approximate Bayesian computation, and synthetic likelihood.
+The second goal of this package is to be compatible with likelihood-free Bayesian inference methodologies that use approximations of the likelihood function such as probability density approximation, kernel-based approximate Bayesian computation, and synthetic likelihood.
 
 ## Installation
 
