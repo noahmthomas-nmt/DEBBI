@@ -1,3 +1,42 @@
+#' DEMCMC
+#'
+#' @param name LogPostLike
+#'
+#' @return posteriors samples from DEMCMC
+#' @export
+#'
+#' @examples
+#' #simulate from model
+#' dataExample=matrix(rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = T)
+#
+#' #list parameter names
+#' par_names_example=c("mu_1","mu_2")
+#'
+#' #log posterior likelihood function = log likelihood + log prior | returns a scalar
+#' LogPostLikeExample=function(x,data,par_names){
+#'  out=0
+#'
+#'  names(x)<-par_names
+#'
+#'  # log prior
+#'  out=out+sum(dnorm(x["mu_1"],0,sd=1,log=T))
+#'  out=out+sum(dnorm(x["mu_2"],0,sd=1,log=T))
+#'
+#'  # log likelihoods
+#'  out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=T))
+#'  out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=T))
+#'
+#'  return(out)
+#'}
+#'
+#'# Sample from posterior
+#'DEMCMC(LogPostLike=LogPostLikeExample,
+#'       control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
+#'                                   n_iter=1000, n_chains=12,
+#'                                   init_sd=.01,init_center=0,
+#'                                   n_cores_use=1,step_size=NULL,
+#'                                   jitter_size=1e-6,parallelType = "none"),data=dataExample,
+#'       par_names = par_names_example)
 DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
 
   # import values we will reuse throughout process
@@ -34,7 +73,7 @@ DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
 
     doParallel::registerDoParallel(control_pars$n_cores_use)
     cl_use <- parallel::makeCluster(control_pars$n_cores_use,
-                          type=control_pars$parallelType)
+                                    type=control_pars$parallelType)
   }
 
   print("running DEMCMC")
@@ -53,18 +92,21 @@ DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
                                 n_chains=control_pars$n_chains,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
     } else {
       temp=matrix(unlist(parallel::parLapply(cl_use,1:control_pars$n_chains,CrossoverMC,
-                                   par_indices=1:control_pars$n_pars,
-                                   current_theta=theta[thetaIdx,,],  # current parameter values for chain (numeric vector)
-                                   current_log_post_like=log_post_like[thetaIdx,], # corresponding log like for (numeric vector)
-                                   LogPostLike=LogPostLike, # log likelihood function (returns scalar)
-                                   step_size=control_pars$step_size,
-                                   jitter_size=control_pars$jitter_size,
-                                   n_chains=control_pars$n_chains,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
+                                             par_indices=1:control_pars$n_pars,
+                                             current_theta=theta[thetaIdx,,],  # current parameter values for chain (numeric vector)
+                                             current_log_post_like=log_post_like[thetaIdx,], # corresponding log like for (numeric vector)
+                                             LogPostLike=LogPostLike, # log likelihood function (returns scalar)
+                                             step_size=control_pars$step_size,
+                                             jitter_size=control_pars$jitter_size,
+                                             n_chains=control_pars$n_chains,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
 
     }
     log_post_like[thetaIdx,]=temp[,1]
     theta[thetaIdx,,]=temp[,2:(control_pars$n_pars+1)]
-
+    if(iter<control_pars$n_iter){
+      log_post_like[thetaIdx+1,]=temp[,1]
+      theta[thetaIdx+1,,]=temp[,2:(control_pars$n_pars+1)]
+    }
     #   # purification step
     #   if(iter%%purify.rate==0){
     #     temp=unlist(lapply(1:n_chains,PurifyMC,
@@ -74,11 +116,11 @@ DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
     #     log_post_like[iter,]=temp
     #   }
 
+    if(iter%%100==0)print(paste0('iter ',iter,'/',control_pars$n_iter))
     if(iter>control_pars$burnin & iter%%control_pars$thin==0){
       thetaIdx=thetaIdx+1
     }
 
-    print(paste0('iter ',iter,'/',control_pars$n_iter))
   }
   # cluster initialization
   if(!control_pars$parallelType=='none'){
