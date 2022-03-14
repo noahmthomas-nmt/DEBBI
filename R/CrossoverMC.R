@@ -1,3 +1,17 @@
+#' CrossoverMC
+#'
+#' @param chain_index  which chain you are updating
+#' @param par_indices  which parameters you are updating (int vector)
+#' @param current_theta current parameter values for chain (numeric vector)
+#' @param current_log_post_like  log posterior likelihood for current chain values
+#' @param LogPostLike  log likelihood + log prior function (returns scalar)
+#' @param step_size step size in DE jump
+#' @param jitter_size noise
+#' @param n_chains number of chains
+#' @noRd
+
+
+
 CrossoverMC=function(chain_index, # which chain you are updating
                      par_indices, # which parameters you are updating (int vector)
                      current_theta,  # current parameter values for chain (numeric vector)

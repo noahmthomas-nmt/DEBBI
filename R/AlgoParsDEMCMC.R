@@ -1,3 +1,18 @@
+#' AlgoParsDEMCMC
+#'
+#' @param n_pars number of free parameters estimated
+#' @param n_chains number of MCMC chains, 3*n_pars is the default value
+#' @param n_iter number of iterations to run the sampling algorithm, 1000 is default
+#' @param init_sd positive scalar or n_pars-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution
+#' @param init_center scalar or n_pars-dimensional numeric vector, determines the mean of the Gaussian initialization distribution
+#' @param n_cores_use number of cores used when using parallelization.
+#' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_pars) which is optimal for multivariate Gaussian target distribution (ter Braak, 2006)
+#' @param jitter_size positive scalar, noise is added during crossover step from Uniform(-jitter_size,jitter_size) distribution. 1e-6 is the default value.
+#' @param parallelType string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
+#' @param burnin number of initial iterations to discard. Default value is 0.
+#' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.
+#' @return list of control parameters for the DEMCMC function
+#' @export
 
 AlgoParsDEMCMC=function(n_pars,
                         n_chains=NULL,
@@ -149,19 +164,19 @@ AlgoParsDEMCMC=function(n_pars,
   }
 
   #nSamples Per Chains
-  nSamplesPerChain=floor((n_iter-burnin)/thin)
+  n_samples_per_chain=floor((n_iter-burnin)/thin)
   ### catch errors
-  if(nSamplesPerChain<1 | (!is.finite(nSamplesPerChain))){
+  if(n_samples_per_chain<1 | (!is.finite(n_samples_per_chain))){
     stop('ERROR: number of samples per chain is negative or non finite.
-         nSamplesPerChain=floor((n_iter-burnin)/thin)')
+         n_samples_per_chain=floor((n_iter-burnin)/thin)')
   }
 
   # purify
-  nSamplesPerChain=floor((n_iter-burnin)/thin)
+  n_samples_per_chain=floor((n_iter-burnin)/thin)
   ### catch errors
-  if(nSamplesPerChain<1 | (!is.finite(nSamplesPerChain))){
+  if(n_samples_per_chain<1 | (!is.finite(n_samples_per_chain))){
     stop('ERROR: number of samples per chain is negative or non finite.
-         nSamplesPerChain=floor((n_iter-burnin)/thin)')
+         n_samples_per_chain=floor((n_iter-burnin)/thin)')
   }
 
 
@@ -177,7 +192,7 @@ AlgoParsDEMCMC=function(n_pars,
            'burnin'=burnin,
            'thin'=thin,
            'purify'=Inf,
-           'nSamplesPerChain'=nSamplesPerChain)
+           'n_samples_per_chain'=n_samples_per_chain)
 
   return(out)
 }

@@ -31,9 +31,9 @@ devtools::install_github("bmgaldo/DEBBI")
 Estimate mean parameters of two independent normal distributions with
 known standard deviations using DEMCMC
 
-    #> ℹ Loading DEBBI
-
 ``` r
+devtools::load_all()
+#> ℹ Loading DEBBI
 library(DEBBI)
 
 # simulate from model
@@ -62,10 +62,16 @@ LogPostLikeExample=function(x,data,par_names){
 # Sample from posterior
 post <- DEMCMC(LogPostLike=LogPostLikeExample,
                   control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
-                                     n_iter=500, n_chains=12,
-                                     init_sd=.01,init_center=0,
-                                     n_cores_use=1,step_size=NULL,
-                                     jitter_size=1e-6,burnin=100,parallelType = "none"),data=dataExample,
+                                     n_iter=500, 
+                                     n_chains=12,
+                                     init_sd=.01,
+                                     init_center=0,
+                                     n_cores_use=1,
+                                     step_size=NULL,
+                                     jitter_size=1e-6,
+                                     burnin=100,
+                                     parallelType = "none"),
+                  data=dataExample,
                   par_names = par_names_example)
 #> [1] "initalizing chains..."
 #> [1] "1 / 12"

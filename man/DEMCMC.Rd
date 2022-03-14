@@ -7,10 +7,14 @@
 DEMCMC(LogPostLike, control_pars = AlgoParsDEMCMC(), ...)
 }
 \arguments{
-\item{name}{LogPostLike}
+\item{LogPostLike}{function whose first arguement is n_pars-dimensional model paramemter vector and returns (scalar) sum of log prior density and log likelihood for the paramemter vector.}
+
+\item{control_pars}{control parameters for DEMCMC algo. see AlgoParsDEMCMC function documention for more details.}
+
+\item{...}{additional arguments to pass LogPostLike}
 }
 \value{
-posteriors samples from DEMCMC
+list contain posterior samples from DEMCMC in a n_samples_per_chain x n_chains x n_pars array and the log likelihood of each sample in a n_samples_per_chain x n_chains array.
 }
 \description{
 DEMCMC
