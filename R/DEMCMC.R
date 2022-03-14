@@ -1,14 +1,14 @@
 #' DEMCMC
 #'
 #' @param LogPostLike function whose first arguement is n_pars-dimensional model paramemter vector and returns (scalar) sum of log prior density and log likelihood for the paramemter vector.
-#' @param control_pars control parameters for DEMCMC algo. see AlgoParsDEMCMC function documention for more details.
+#' @param control_pars control parameters for DEMCMC algo. see \link[DEBBI]{AlgoParsDEMCMC} function documention for more details.
 #' @param ... additional arguments to pass LogPostLike
 #' @return list contain posterior samples from DEMCMC in a n_samples_per_chain x n_chains x n_pars array and the log likelihood of each sample in a n_samples_per_chain x n_chains array.
 #' @export
 #'
 #' @examples
 #' #simulate from model
-#' dataExample=matrix(rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = T)
+#' dataExample=matrix(stats::rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = TRUE)
 #
 #' #list parameter names
 #' par_names_example=c("mu_1","mu_2")
@@ -20,12 +20,12 @@
 #'  names(x)<-par_names
 #'
 #'  # log prior
-#'  out=out+sum(dnorm(x["mu_1"],0,sd=1,log=T))
-#'  out=out+sum(dnorm(x["mu_2"],0,sd=1,log=T))
+#'  out=out+sum(dnorm(x["mu_1"],0,sd=1,log=TRUE))
+#'  out=out+sum(dnorm(x["mu_2"],0,sd=1,log=TRUE))
 #'
 #'  # log likelihoods
-#'  out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=T))
-#'  out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=T))
+#'  out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=TRUE))
+#'  out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=TRUE))
 #'
 #'  return(out)
 #'}
@@ -33,11 +33,16 @@
 #'# Sample from posterior
 #'DEMCMC(LogPostLike=LogPostLikeExample,
 #'       control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
-#'                                   n_iter=1000, n_chains=12,
-#'                                   init_sd=.01,init_center=0,
-#'                                   n_cores_use=1,step_size=NULL,
-#'                                   jitter_size=1e-6,parallelType = "none"),data=dataExample,
-#'       par_names = par_names_example)
+#'                                   n_iter=1000,
+#'                                   n_chains=12,
+#'                                   init_sd=.01,
+#'                                   init_center=0,
+#'                                   n_cores_use=1,
+#'                                   step_size=NULL,
+#'                                   jitter_size=1e-6,
+#'                                   parallelType = "none"),
+#'                                   data=dataExample,
+#'                                   par_names = par_names_example)
 DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
 
   # import values we will reuse throughout process

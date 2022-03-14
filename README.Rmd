@@ -34,7 +34,7 @@ devtools::install_github("bmgaldo/DEBBI")
 Estimate mean parameters of two independent normal distributions with known standard deviations using DEMCMC
 
 ```{r example}
-devtools::load_all()
+
 library(DEBBI)
 
 # simulate from model

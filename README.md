@@ -32,8 +32,6 @@ Estimate mean parameters of two independent normal distributions with
 known standard deviations using DEMCMC
 
 ``` r
-devtools::load_all()
-#> ℹ Loading DEBBI
 library(DEBBI)
 
 # simulate from model
