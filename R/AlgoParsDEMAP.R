@@ -1,20 +1,21 @@
-#' AlgoParsDEMCMC
-#'
+#' AlgoParsDEMAP
+#' @description get control parameters for DEMAP function
 #' @param n_pars number of free parameters estimated
 #' @param n_chains number of MCMC chains, 3*n_pars is the default value
 #' @param n_iter number of iterations to run the sampling algorithm, 1000 is default
+#' @param crossover_rate number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.
 #' @param init_sd positive scalar or n_pars-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution
 #' @param init_center scalar or n_pars-dimensional numeric vector, determines the mean of the Gaussian initialization distribution
 #' @param n_cores_use number of cores used when using parallelization.
-#' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_pars) which is optimal for multivariate Gaussian target distribution (ter Braak, 2006)
+#' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_pars).
 #' @param jitter_size positive scalar, noise is added during crossover step from Uniform(-jitter_size,jitter_size) distribution. 1e-6 is the default value.
 #' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
-#' @param burnin number of initial iterations to discard. Default value is 0.
+#' @param return_trace return particle trajectories, this is helpful for diagnosing convergence or debugging model trace. If true, DEMAP will return an iteration $x$ n_chains $x$ n_pars array and the log likelihood of each sample in a iteration x n_chains array.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.
 #' @return list of control parameters for the DEMCMC function
 #' @export
 
-AlgoParsDEMCMC=function(n_pars,
+AlgoParsDEMAP=function(n_pars,
                         n_chains=NULL,
                         n_iter=1000,
                         init_sd=0.01,
@@ -22,8 +23,9 @@ AlgoParsDEMCMC=function(n_pars,
                         n_cores_use=1,
                         step_size=NULL,
                         jitter_size=1e-6,
+                        crossover_rate=1,
                         parallel_type='none',
-                        burnin=0,
+                        return_trace=FALSE,
                         thin=1){
   # n_pars
   ### catch errors
@@ -124,6 +126,22 @@ AlgoParsDEMCMC=function(n_pars,
     stop('ERROR: jitter_size vector length must be 1 ')
   }
 
+  # crossover_rate
+  ### if null assign default value
+  if(any(is.null(crossover_rate))){
+    crossover_rate=1
+  }
+  ### catch errors
+  crossover_rate=as.numeric(crossover_rate)
+  if(any(!is.finite(crossover_rate))){
+    stop('ERROR: crossover_rate is not finite')
+  }
+  else if(any(crossover_rate>1) | any(crossover_rate<=0) | length(crossover_rate)>1){
+    stop('ERROR: crossover_rate must be a numeric scalar on the interval (0,1]')
+  } else if(is.complex(crossover_rate)){
+    stop('ERROR: crossover_rate cannot be complex')
+  }
+
   #parallel_type
   validParType=c('none','FORK','PSOCK')
   ### assign NULL value default
@@ -136,18 +154,9 @@ AlgoParsDEMCMC=function(n_pars,
   }
 
   # burnin
-  ### if null assign default value
-  if(is.null(burnin)){
-    burnin=0
-  }
-  ### catch errors
-  burnin=as.integer(burnin)
-  if(any(!is.finite(burnin))){
-    stop('ERROR: burnin is not finite')
-  }
-  else if(any(burnin<0) | any(burnin>=n_iter) | length(burnin)>1){
-    stop('ERROR: burnin must be a scalar integer from the interval [0,n_iter)')
-  }
+  burnin=0
+
+
 
   # thin
   ### if null assign default value
@@ -187,12 +196,14 @@ AlgoParsDEMCMC=function(n_pars,
            'init_center'=init_center,
            'n_cores_use'=n_cores_use,
            'step_size'=step_size,
+           'crossover_rate'=crossover_rate,
            'jitter_size'=jitter_size,
            'parallel_type'=parallel_type,
            'burnin'=burnin,
            'thin'=thin,
            'purify'=Inf,
-           'n_samples_per_chain'=n_samples_per_chain)
+           'n_samples_per_chain'=n_samples_per_chain,
+           'return_trace'=return_trace)
 
   return(out)
 }

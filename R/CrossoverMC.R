@@ -8,6 +8,7 @@
 #' @param step_size step size in DE jump
 #' @param jitter_size noise
 #' @param n_chains number of chains
+#' @param ... additional arguments for LogPostLike function
 #' @noRd
 
 
@@ -32,7 +33,7 @@ CrossoverMC=function(chain_index, # which chain you are updating
   theta_use[par_indices] = theta_use[par_indices] +
     step_size*(current_theta[parent_chain_indices[1],par_indices] -
                  current_theta[parent_chain_indices[2],par_indices]) +
-    stats::runif(1,-jitter_size,jitter_size)
+    stats::runif(length(par_indices),-jitter_size,jitter_size)
 
   theta_use = matrix(theta_use,1,length(theta_use))
 

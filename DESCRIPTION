@@ -4,11 +4,12 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Brendan Matthew", "Galdo", , "brendan.m.galdo@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Bayesian inference algorthims based on the easily-parallelizable, population-based "differential evolution" (DE) algorithim. Users can obtain posterior mode (MAP) estimates, posterior samples via DEMCMC, and varitional approximations via DEVI. 
+Description: Bayesian inference algorithms based on the population-based "differential evolution" (DE) algorithm. Users can obtain posterior mode (MAP) estimates, posterior samples via DEMCMC, and variational approximations via DEVI. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: 
     stats,
-    doParallel
+    doParallel,
+    randtoolbox
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2

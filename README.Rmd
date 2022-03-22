@@ -29,11 +29,11 @@ You can install the development version of DEBBI from [GitHub](https://github.co
 devtools::install_github("bmgaldo/DEBBI")
 ```
 
-## Example
+## DEMCMC Example
 
 Estimate mean parameters of two independent normal distributions with known standard deviations using DEMCMC
 
-```{r example}
+```{r DEMCMC example}
 
 library(DEBBI)
 

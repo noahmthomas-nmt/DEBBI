@@ -26,7 +26,7 @@ You can install the development version of DEBBI from
 devtools::install_github("bmgaldo/DEBBI")
 ```
 
-## Example
+## DEMCMC Example
 
 Estimate mean parameters of two independent normal distributions with
 known standard deviations using DEMCMC
@@ -104,4 +104,4 @@ par(mfrow=c(2,2))
   matplot(post$samples[,,2],type='l',ylab=par_names_example[2],xlab="iteration")
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-DEMCMC example-1.png" width="100%" />
