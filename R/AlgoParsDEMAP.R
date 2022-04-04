@@ -1,7 +1,7 @@
 #' AlgoParsDEMAP
 #' @description get control parameters for DEMAP function
 #' @param n_pars number of free parameters estimated
-#' @param n_chains number of MCMC chains, 3*n_pars is the default value
+#' @param n_chains number of particle chains, 3*n_pars is the default value
 #' @param n_iter number of iterations to run the sampling algorithm, 1000 is default
 #' @param crossover_rate number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.
 #' @param init_sd positive scalar or n_pars-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution
@@ -10,9 +10,9 @@
 #' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_pars).
 #' @param jitter_size positive scalar, noise is added during crossover step from Uniform(-jitter_size,jitter_size) distribution. 1e-6 is the default value.
 #' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
-#' @param return_trace return particle trajectories, this is helpful for diagnosing convergence or debugging model trace. If true, DEMAP will return an iteration $x$ n_chains $x$ n_pars array and the log likelihood of each sample in a iteration x n_chains array.
+#' @param return_trace boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_pars array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.
-#' @return list of control parameters for the DEMCMC function
+#' @return list of control parameters for the DEMAP function
 #' @export
 
 AlgoParsDEMAP=function(n_pars,
@@ -153,11 +153,6 @@ AlgoParsDEMAP=function(n_pars,
     stop('ERROR: invalid parallel_type')
   }
 
-  # burnin
-  burnin=0
-
-
-
   # thin
   ### if null assign default value
   if(is.null(thin)){
@@ -173,19 +168,19 @@ AlgoParsDEMAP=function(n_pars,
   }
 
   #nSamples Per Chains
-  n_samples_per_chain=floor((n_iter-burnin)/thin)
+  n_iters_per_chain=floor((n_iter)/thin)
   ### catch errors
-  if(n_samples_per_chain<1 | (!is.finite(n_samples_per_chain))){
+  if(n_iters_per_chain<1 | (!is.finite(n_iters_per_chain))){
     stop('ERROR: number of samples per chain is negative or non finite.
-         n_samples_per_chain=floor((n_iter-burnin)/thin)')
+         n_iters_per_chain=floor((n_iter-burnin)/thin)')
   }
 
   # purify
-  n_samples_per_chain=floor((n_iter-burnin)/thin)
+  n_iters_per_chain=floor((n_iter)/thin)
   ### catch errors
-  if(n_samples_per_chain<1 | (!is.finite(n_samples_per_chain))){
+  if(n_iters_per_chain<1 | (!is.finite(n_iters_per_chain))){
     stop('ERROR: number of samples per chain is negative or non finite.
-         n_samples_per_chain=floor((n_iter-burnin)/thin)')
+         n_iters_per_chain=floor((n_iter-burnin)/thin)')
   }
 
 
@@ -199,10 +194,9 @@ AlgoParsDEMAP=function(n_pars,
            'crossover_rate'=crossover_rate,
            'jitter_size'=jitter_size,
            'parallel_type'=parallel_type,
-           'burnin'=burnin,
            'thin'=thin,
            'purify'=Inf,
-           'n_samples_per_chain'=n_samples_per_chain,
+           'n_iters_per_chain'=n_iters_per_chain,
            'return_trace'=return_trace)
 
   return(out)

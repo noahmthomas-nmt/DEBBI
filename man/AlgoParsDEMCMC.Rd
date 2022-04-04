@@ -7,6 +7,7 @@
 AlgoParsDEMCMC(
   n_pars,
   n_chains = NULL,
+  par_names = NULL,
   n_iter = 1000,
   init_sd = 0.01,
   init_center = 0,
@@ -22,6 +23,8 @@ AlgoParsDEMCMC(
 \item{n_pars}{number of free parameters estimated}
 
 \item{n_chains}{number of MCMC chains, 3*n_pars is the default value}
+
+\item{par_names}{optional vector of parameter names}
 
 \item{n_iter}{number of iterations to run the sampling algorithm, 1000 is default}
 

@@ -2,5 +2,7 @@
 
 export(AlgoParsDEMAP)
 export(AlgoParsDEMCMC)
+export(AlgoParsDEVI)
 export(DEMAP)
 export(DEMCMC)
+export(DEVI)

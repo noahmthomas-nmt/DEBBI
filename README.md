@@ -32,6 +32,7 @@ Estimate mean parameters of two independent normal distributions with
 known standard deviations using DEMCMC
 
 ``` r
+set.seed(43210)
 library(DEBBI)
 
 # simulate from model
@@ -62,13 +63,7 @@ post <- DEMCMC(LogPostLike=LogPostLikeExample,
                   control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
                                      n_iter=500, 
                                      n_chains=12,
-                                     init_sd=.01,
-                                     init_center=0,
-                                     n_cores_use=1,
-                                     step_size=NULL,
-                                     jitter_size=1e-6,
-                                     burnin=100,
-                                     parallelType = "none"),
+                                     burnin=100),
                   data=dataExample,
                   par_names = par_names_example)
 #> [1] "initalizing chains..."
@@ -97,11 +92,75 @@ par(mfrow=c(2,2))
 
   hist(post$samples[,,1],main="marginal posterior distribution",
        xlab=par_names_example[1],prob=T)
+  # plot true parameter value as vertical line
+  abline(v=-1,lwd=3)
   matplot(post$samples[,,1],type='l',ylab=par_names_example[1],
-          main="chain trace plot",xlab="iteration")
-
+          main="chain trace plot",xlab="iteration",lwd=2)
+  # plot true parameter value as horizontal line
+  abline(h=-1,lwd=3)
+  
   hist(post$samples[,,2],xlab=par_names_example[2],prob=T,main="")
-  matplot(post$samples[,,2],type='l',ylab=par_names_example[2],xlab="iteration")
+  # plot true parameter value as vertical line
+  abline(v=1,lwd=3)
+  matplot(post$samples[,,2],type='l',ylab=par_names_example[2],xlab="iteration",lwd=2)
+  # plot true parameter value as horizontal line
+  abline(h=1,lwd=3)
 ```
 
-<img src="man/figures/README-DEMCMC example-1.png" width="100%" />
+<img src="man/figures/README-DEMCMC example-1.png" width="100%" /> ##
+DEMAP Example
+
+Find posterior mode (a.k.a. maximum a posteriori or MAP) of mean
+parameters of two independent normal distributions with known standard
+deviations using DE
+
+``` r
+# optimize posterior wrt to theta
+map <- DEMAP(LogPostLike=LogPostLikeExample,
+                  control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
+                                     n_iter=100, 
+                                     n_chains=12, return_trace = T),
+                  data=dataExample,
+                  par_names = par_names_example)
+#> [1] "initalizing chains..."
+#> [1] "1 / 12"
+#> [1] "2 / 12"
+#> [1] "3 / 12"
+#> [1] "4 / 12"
+#> [1] "5 / 12"
+#> [1] "6 / 12"
+#> [1] "7 / 12"
+#> [1] "8 / 12"
+#> [1] "9 / 12"
+#> [1] "10 / 12"
+#> [1] "11 / 12"
+#> [1] "12 / 12"
+#> [1] "chain initialization complete  :)"
+#> [1] "running DE to find MAP"
+#> [1] "iter 100/100"
+
+
+  print(paste0('map estimates:',round(map$mapEst,2)))
+#> [1] "map estimates:-1.1" "map estimates:0.88"
+  print(paste0('log posterior likelihood:',round(map$log_post_like,2)))
+#> [1] "log posterior likelihood:-143.05"
+  
+par(mfrow=c(2,2))
+  
+  # plot particle trace plot for mu 1
+  matplot(map$theta_trace[,,1],type='l',ylab=par_names_example[1],xlab="iteration",lwd=2)
+  # plot true parameter value as horizontal line
+  abline(h=-1,lwd=3)
+  
+  # plot particle trace plot for mu 2
+  matplot(map$theta_trace[,,2],type='l',ylab=par_names_example[2],xlab="iteration",lwd=2)
+  # plot true parameter value as horizontal line
+  abline(h=1,lwd=3)
+  
+  matplot(map$log_post_like_trace,type='l',ylab='log posterior likelihood',xlab="iteration",lwd=2)
+  abline(h=-1,lwd=3)
+```
+
+<img src="man/figures/README-DEMAP example-1.png" width="100%" />
+
+s

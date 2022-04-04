@@ -127,5 +127,6 @@ DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
   if(!control_pars$parallel_type=='none'){
     parallel::stopCluster(cl=cl_use)
   }
+  dimnames(theta)[[3]] <- control_pars$par_names
   return(list('samples'=theta,'log_post_like'=log_post_like,'control_pars'=control_pars))
 }

@@ -1,56 +1,29 @@
-QLog=function(use_theta,use_lambda,control_pars,S=1){
-  # returns log density Q(theta|lambda)
-  out=0
-  out=stats::dnorm(x=use_theta,
-                   mean=rep(use_lambda[1:(control_pars$n_pars_model)],S),
-                   sd=rep(exp(use_lambda[((control_pars$n_pars_model)+1):(control_pars$n_pars_dist)]),S),
-                   log=T)
-  out[(out==-Inf) | is.na(out)]=control_pars$neg_inf
-  return(sum(out));
-}
-
-QSample=function(use_lambda,control_pars,S){
-  # returns a collapsed vector for a S by n_pars_model matrix sampled from Q(theta|lambda)
-  out=matrix(NA,S,control_pars$n_pars_model)
-  if(control_pars$use_QMC==T){
-    if(control_pars$quasi_rand_seq=='sobol')quantileMat=c(t(randtoolbox::sobol(S,control_pars$n_pars_model)))
-    if(control_pars$quasi_rand_seq=='halton')quantileMat=c(t(randtoolbox::halton(S,control_pars$n_pars_model)))
-  } else {
-    quantileMat=stats::runif(S*control_pars$n_pars_model,0,1)
-  }
-
-  out=stats::qnorm(quantileMat,rep(use_lambda[1:control_pars$n_pars_model],S),rep(exp(use_lambda[(control_pars$n_pars_model+1):(control_pars$n_pars_dist)]),S))
-  return(out)
-}
-
-
-KLHat=function(lambda,LogPostLike,control_pars,S,...){
-  # monte carlo approximation KL divergence up to a constant
-
-  out=0 #initalize output vector
-
-  # sample from q
-  theta_mat <- QSample(use_lambda=lambda,control_pars,S)
-
-  # calc mean differences in log densities for theta_mat
-  q_log_density=QLog(theta_mat,use_lambda = lambda,control_pars,S)
-  post_log_density=apply(matrix(theta_mat,ncol=control_pars$n_pars_model,byrow = T),MARGIN = 1,FUN=LogPostLike,...)
-  out <- mean(q_log_density-post_log_density)
-
-
-  return(out)
-}
-
-
-
-ELBO=function(lambda,LogPostLike,control_pars,S,...){
-  # monte carlo approximation ELBO
-  out=KLHat(lambda,LogPostLike,control_pars,S,...)*-1
-  return(out)
-}
+#' AlgoParsDEVI
+#' @description get control parameters for DEMAP function
+#' @param n_pars number of free parameters estimated
+#' @param par_names optional vector of parameter names
+#' @param n_chains number of particle chains used for optimization, 3*n_pars is the default value
+#' @param n_iter number of iterations to run the sampling algorithm, 1000 is default
+#' @param crossover_rate number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.
+#' @param init_sd positive scalar or n_pars-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution
+#' @param init_center scalar or n_pars-dimensional numeric vector, determines the mean of the Gaussian initialization distribution
+#' @param n_cores_use number of cores used when using parallelization.
+#' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_pars).
+#' @param jitter_size positive scalar, noise is added during crossover step from Uniform(-jitter_size,jitter_size) distribution. 1e-6 is the default value.
+#' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
+#' @param return_trace boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_pars array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
+#' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running algorithm for longer.
+#' @param burnin number of initial iterations to discard. Default value is 0.
+#' @param n_samples_ELBO number of samples used for the monte carlo estimator ot the ELBO (the objective function). default is 10.
+#' @param use_QMC boolean, if true, a quasi-monte carlo estimator is used to estimate ELBO during optimization. default is TRUE.
+#' @param LRVB_correction boolean, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.
+#' @param n_samples_LRVB number of samples used for LRVB correction. default is 25.
+#' @param quasi_rand_seq type of low discrepancy sequence used for quasi monte carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.
+#' @param neg_inf if density for a given value of theta is numerically 0 for q, this value is assigned for log density. This helps with numeric stability of algorithm. Default value is -750.
+#' @return list of control parameters for the DEVI function
+#' @export
 
 AlgoParsDEVI=function(n_pars,
-                      par_names=NULL,
                       n_chains = NULL,
                       n_iter = 1000,
                       init_sd = 0.01,
@@ -60,15 +33,14 @@ AlgoParsDEVI=function(n_pars,
                       jitter_size = 1e-6,
                       parallel_type = 'none',
                       use_QMC = T,
-                      quasi_rand_seq = 'halton',
+                      quasi_rand_seq = 'sobol',
                       n_samples_ELBO = 10,
                       LRVB_correction = TRUE,
                       n_samples_LRVB = 25,
                       neg_inf = -750,
                       thin = 1,
                       burnin = 0,
-                      return_trace = FALSE,
-                      crossover_rate=1){
+                      return_trace = FALSE){
   # n_pars
   ### catch errors
   n_pars=as.integer(n_pars)
@@ -86,7 +58,7 @@ AlgoParsDEVI=function(n_pars,
     stop('ERROR: par_names does not match size of n_pars')
   }
 
-  dist_par_names=c(paste0(par_names,'_MEAN'),paste0(par_names,'_VAR'))
+  dist_par_names=c(paste0(par_name,'_MEAN'),paste0(par_name,'_VAR'))
 
   # n_chains
   ### if null assign default value
@@ -125,7 +97,7 @@ AlgoParsDEVI=function(n_pars,
   } else if(!(length(init_sd)==1 | length(init_sd)==n_pars)){
     stop('ERROR: init_sd vector length must be 1 or n_pars')
   }
-  if(any(init_sd==0)){
+  if(any(init_sd)){
     warning('WARNING an init_sd value is 0')
   }
 
@@ -328,7 +300,7 @@ AlgoParsDEVI=function(n_pars,
            n_iters_per_chain=floor((n_iter-burnin)/thin)')
   }
 
-  out=list('n_pars_model'=n_pars,
+  out=list('n_pars_models'=n_pars,
            'par_names'=par_names,
            'n_chains'=n_chains,
            'n_iter'=n_iter,
@@ -350,137 +322,5 @@ AlgoParsDEVI=function(n_pars,
            'n_iters_per_chain'=n_iters_per_chain)
 
   return(out)
-}
-
-dataExample=matrix(stats::rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = TRUE)
-##list parameter names
-par_names_example=c("mu_1","mu_2")
-
-#log posterior likelihood function = log likelihood + log prior | returns a scalar
-LogPostLikeExample=function(x,data,par_names){
- out=0
-
- names(x)<-par_names
-
- # log prior
- out=out+sum(dnorm(x["mu_1"],0,sd=1,log=TRUE))
- out=out+sum(dnorm(x["mu_2"],0,sd=1,log=TRUE))
-
- # log likelihoods
- out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=TRUE))
- out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=TRUE))
-
- return(out)
-}
-
-DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
-
-  # import values we will reuse throughout process
-  # create memory structures for storing posterior samples
-  lambda=array(NA,dim=c(control_pars$n_iters_per_chain,
-                        control_pars$n_chains,
-                        control_pars$n_pars_dist))
-  ELBO_values=matrix(-Inf,
-                     nrow=control_pars$n_iters_per_chain,
-                     ncol=control_pars$n_chains)
-
-
-  # chain initialization
-  print('initalizing chains...')
-  for(chain_idx in 1:control_pars$n_chains){
-    count=0
-    while (ELBO_values[1,chain_idx]  == -Inf) {
-      lambda[1,chain_idx,] <- stats::rnorm(control_pars$n_pars,
-                                           control_pars$init_center,
-                                           control_pars$init_sd)
-
-      ELBO_values[1,chain_idx] <- ELBO(lambda[1,chain_idx,],...)
-      count=count+1
-      if(count>100){
-        stop('chain initialization failed.
-        inspect likelihood and prior or change init_center/init_sd to sample more
-             likely parameter values')
-      }
-    }
-    print(paste0(chain_idx," / ",control_pars$n_chains))
-  }
-  print('chain initialization complete  :)')
-
-  # cluster initialization
-  if(!control_pars$parallel_type=='none'){
-
-    print(paste0("initalizing ",
-                 control_pars$parallel_type," cluser with ",
-                 control_pars$n_cores_use," cores"))
-
-    doParallel::registerDoParallel(control_pars$n_cores_use)
-    cl_use <- parallel::makeCluster(control_pars$n_cores_use,
-                                    type=control_pars$parallel_type)
-  }
-
-  print("running DE to find MAP")
-  lambdaIdx=1
-  for(iter in 1:control_pars$n_iter){
-
-    if(control_pars$parallel_type=='none'){
-      # cross over step
-      temp=matrix(unlist(lapply(1:control_pars$n_chains,CrossoverOptimize,
-                                current_pars=lambda[lambdaIdx,,],  # current parameter values for chain (numeric vector)
-                                current_weight=ELBO_values[lambdaIdx,], # corresponding log like for (numeric vector)
-                                objFun=LogPostLike, # log likelihood function (returns scalar)
-                                step_size=control_pars$step_size,
-                                jitter_size=control_pars$jitter_size,
-                                n_chains=control_pars$n_chains,
-                                crossover_rate=control_pars$crossover_rate,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
-    } else {
-      temp=matrix(unlist(parallel::parLapply(cl_use,1:control_pars$n_chains,CrossoverOptimize,
-                                             current_pars=lambda[lambdaIdx,,],  # current parameter values for chain (numeric vector)
-                                             current_weight=ELBO_values[lambdaIdx,], # corresponding log like for (numeric vector)
-                                             objFun=ELBO, # log likelihood function (returns scalar)
-                                             step_size=control_pars$step_size,
-                                             jitter_size=control_pars$jitter_size,
-                                             n_chains=control_pars$n_chains,
-                                             crossover_rate=control_pars$crossover_rate,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
-
-    }
-    ELBO_values[lambdaIdx,]=temp[,1]
-    lambda[lambdaIdx,,]=temp[,2:(control_pars$n_pars+1)]
-    if(iter<control_pars$n_iter){
-      ELBO_values[lambdaIdx+1,]=temp[,1]
-      lambda[lambdaIdx+1,,]=temp[,2:(control_pars$n_pars+1)]
-    }
-    #   # purification step
-    #   if(iter%%purify.rate==0){
-    #     temp=unlist(lapply(1:n_chains,PurifyMC,
-    #                                 current_lambda=lambda[iter,],  # current parameter values for chain (numeric vector)
-    #                                 current_log_post_like=log_post_like[iter,], # corresponding log like for (numeric vector)
-    #                                 LogPostLike=LogPostLike)) # log likelihood function (returns scalar),n.chains,n.pars+1,byrow=T)
-    #     log_post_like[iter,]=temp
-    #   }
-
-    if(iter%%100==0)print(paste0('iter ',iter,'/',control_pars$n_iter))
-    if(iter%%control_pars$thin==0){
-      lambdaIdx=lambdaIdx+1
-    }
-
-  }
-  # cluster stop
-  if(!control_pars$parallel_type=='none'){
-    parallel::stopCluster(cl=cl_use)
-  }
-  maxIdx=which.max(ELBO_values[control_pars$n_iters_per_chain,])
-
-  if(control_pars$return_trace==T){
-    return(list('mapEst'=lambda[control_pars$n_iters_per_chain,
-                                maxIdx,1:control_pars$n_pars_model],
-                'ELBO_values'=ELBO_values[control_pars$n_iters_per_chain,maxIdx],
-                'lambda_trace'=lambda,
-                'ELBO_values_trace'=ELBO_values,
-                'control_pars'=control_pars))
-  } else {
-    return(list('mapEst'=lambda[control_pars$n_iters_per_chain,maxIdx,],
-                'ELBO_values'=ELBO_values[control_pars$n_iters_per_chain,maxIdx],
-                'control_pars'=control_pars))
-  }
 }
 

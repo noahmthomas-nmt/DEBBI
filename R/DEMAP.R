@@ -3,7 +3,7 @@
 #' @param LogPostLike function whose first arguement is an n_pars-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.
 #' @param control_pars control parameters for DE algo. see \code{\link{AlgoParsDEMAP}} function documentation for more details.
 #' @param ... additional arguments to pass LogPostLike
-#' @return list contain posterior samples from DEMCMC in a n_samples_per_chain $x$ n_chains $x$ n_pars array and the log likelihood of each sample in a n_samples_per_chain x n_chains array.
+#' @return list contain posterior samples from DEMCMC in a n_iters_per_chain $x$ n_chains $x$ n_pars array and the log likelihood of each sample in a n_iters_per_chain x n_chains array.
 #' @export
 #' @md
 #' @examples
@@ -30,8 +30,8 @@
 #'  return(out)
 #'}
 #'
-#'# Get map estimattes
-#'DEMAP(LogPostLike=LogPostLikeExample,
+#'# Get map estimates
+#'DEVI(LogPostLike=LogPostLikeExample,
 #'       control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
 #'                                   n_iter=1000,
 #'                                   n_chains=12),
@@ -42,8 +42,8 @@ DEMAP=function(LogPostLike,control_pars=AlgoParsDEMAP(),...){
 
   # import values we will reuse throughout process
   # create memory structures for storing posterior samples
-  theta=array(NA,dim=c(control_pars$n_samples_per_chain,control_pars$n_chains,control_pars$n_pars))
-  log_post_like=matrix(-Inf,nrow=control_pars$n_samples_per_chain,ncol=control_pars$n_chains)
+  theta=array(NA,dim=c(control_pars$n_iters_per_chain,control_pars$n_chains,control_pars$n_pars))
+  log_post_like=matrix(-Inf,nrow=control_pars$n_iters_per_chain,ncol=control_pars$n_chains)
 
 
   # chain initialization
@@ -108,17 +108,9 @@ DEMAP=function(LogPostLike,control_pars=AlgoParsDEMAP(),...){
       log_post_like[thetaIdx+1,]=temp[,1]
       theta[thetaIdx+1,,]=temp[,2:(control_pars$n_pars+1)]
     }
-    #   # purification step
-    #   if(iter%%purify.rate==0){
-    #     temp=unlist(lapply(1:n_chains,PurifyMC,
-    #                                 current_theta=theta[iter,],  # current parameter values for chain (numeric vector)
-    #                                 current_log_post_like=log_post_like[iter,], # corresponding log like for (numeric vector)
-    #                                 LogPostLike=LogPostLike)) # log likelihood function (returns scalar),n.chains,n.pars+1,byrow=T)
-    #     log_post_like[iter,]=temp
-    #   }
 
     if(iter%%100==0)print(paste0('iter ',iter,'/',control_pars$n_iter))
-    if(iter>control_pars$burnin & iter%%control_pars$thin==0){
+    if(iter%%control_pars$thin==0){
       thetaIdx=thetaIdx+1
     }
 
@@ -127,14 +119,18 @@ DEMAP=function(LogPostLike,control_pars=AlgoParsDEMAP(),...){
   if(!control_pars$parallel_type=='none'){
     parallel::stopCluster(cl=cl_use)
   }
-  mapIdx=which.max(log_post_like[control_pars$n_samples_per_chain,])
-
+  mapIdx=which.max(log_post_like[control_pars$n_iters_per_chain,])
+  mapEst=theta[control_pars$n_iters_per_chain,mapIdx,]
+  names(mapEst) <- control_pars$par_names
   if(control_pars$return_trace==T){
-  return(list('mapEst'=theta[control_pars$n_samples_per_chain,mapIdx,],
-              'log_post_like'=log_post_like[control_pars$n_samples_per_chain,mapIdx],
-              'theta_trace'=theta,'log_post_like_trace'=log_post_like,'control_pars'=control_pars))
+  return(list('mapEst'=mapEst,
+              'log_post_like'=log_post_like[control_pars$n_iters_per_chain,mapIdx],
+              'theta_trace'=theta,
+              'log_post_like_trace'=log_post_like,
+              'control_pars'=control_pars))
   } else {
-    return(list('mapEst'=theta[control_pars$n_samples_per_chain,mapIdx,],
-                'log_post_like'=log_post_like[control_pars$n_samples_per_chain,mapIdx],'control_pars'=control_pars))
+    return(list('mapEst'=mapEst,
+                'log_post_like'=log_post_like[control_pars$n_iters_per_chain,mapIdx],
+                'control_pars'=control_pars))
   }
 }

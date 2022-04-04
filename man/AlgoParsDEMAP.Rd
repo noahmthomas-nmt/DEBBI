@@ -22,7 +22,7 @@ AlgoParsDEMAP(
 \arguments{
 \item{n_pars}{number of free parameters estimated}
 
-\item{n_chains}{number of MCMC chains, 3*n_pars is the default value}
+\item{n_chains}{number of particle chains, 3*n_pars is the default value}
 
 \item{n_iter}{number of iterations to run the sampling algorithm, 1000 is default}
 
@@ -40,12 +40,12 @@ AlgoParsDEMAP(
 
 \item{parallel_type}{string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.}
 
-\item{return_trace}{return particle trajectories, this is helpful for diagnosing convergence or debugging model trace. If true, DEMAP will return an iteration $x$ n_chains $x$ n_pars array and the log likelihood of each sample in a iteration x n_chains array.}
+\item{return_trace}{boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_pars array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
 
 \item{thin}{positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.}
 }
 \value{
-list of control parameters for the DEMCMC function
+list of control parameters for the DEMAP function
 }
 \description{
 get control parameters for DEMAP function

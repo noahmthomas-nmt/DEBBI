@@ -1,6 +1,7 @@
 #' AlgoParsDEMCMC
 #'
 #' @param n_pars number of free parameters estimated
+#' @param par_names optional vector of parameter names
 #' @param n_chains number of MCMC chains, 3*n_pars is the default value
 #' @param n_iter number of iterations to run the sampling algorithm, 1000 is default
 #' @param init_sd positive scalar or n_pars-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution
@@ -16,6 +17,7 @@
 
 AlgoParsDEMCMC=function(n_pars,
                         n_chains=NULL,
+                        par_names=NULL,
                         n_iter=1000,
                         init_sd=0.01,
                         init_center=0,
@@ -32,6 +34,14 @@ AlgoParsDEMCMC=function(n_pars,
     stop('ERROR: n_pars is not finite')
   }  else if( n_pars<1 | length(n_pars)>1){
     stop('ERROR: n_pars must be a postitive integer scalar')
+  }
+
+  # par_names
+  ### catch errors
+  if(is.null(par_names)){
+    par_names=paste0('par',1:n_pars)
+  }  else if(!(length(par_names)==n_pars)){
+    stop('ERROR: par_names does not match size of n_pars')
   }
 
   # n_chains
@@ -110,7 +120,7 @@ AlgoParsDEMCMC=function(n_pars,
     stop('ERROR: step_size vector length must be 1 ')
   }
 
-  #jitter_size
+  # jitter_size
   ### assign NULL value default
   if(is.null(jitter_size)){
     jitter_size=1e-6
@@ -192,7 +202,8 @@ AlgoParsDEMCMC=function(n_pars,
            'burnin'=burnin,
            'thin'=thin,
            'purify'=Inf,
-           'n_samples_per_chain'=n_samples_per_chain)
+           'n_samples_per_chain'=n_samples_per_chain,
+           'par_names'=par_names)
 
   return(out)
 }
