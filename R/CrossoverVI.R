@@ -1,25 +1,28 @@
-#' CrossoverOptimize
+#' CrossoverVI
 #'
 #' @param chain_index  which chain you are updating
 #' @param current_pars current parameter values for chain (numeric vector)
 #' @param current_weight  weight for current chain values
-#' @param objFun  function you want to minimize (returns scalar)
+#' @param LogPostLike  log posterior density function (log likelihood + log prior)
 #' @param step_size step size in DE jump
 #' @param jitter_size noise
 #' @param n_chains number of chains
 #' @param crossover_rate rate of updating parameters on a give crossover step (0=no parameters updated, 1=all parameters updated)
-#' @param ... additional arguments for objFun function
+#' @param control_pars list of algorithm control parameters
+#' @param S number of samples for ELBO monte carlo estimate
+#' @param ... additional arguments for LogPostLike function
 #' @noRd
 
-
-
-CrossoverOptimize=function(chain_index,
-                           current_pars,
-                           current_weight,
-                           objFun,
-                           step_size=.8,
-                           jitter_size=1e-6,
-                           n_chains,crossover_rate=1, ... ){
+CrossoverVI=function(chain_index,
+                     current_pars,
+                     current_weight,
+                     LogPostLike,
+                     step_size=.8,
+                     jitter_size=1e-6,
+                     n_chains,
+                     crossover_rate=1,
+                     control_pars,
+                     S, ... ){
 
   # get statistics about chain
   weight_use = current_weight[chain_index]
@@ -43,13 +46,16 @@ CrossoverOptimize=function(chain_index,
   # mate parents for proposal
   pars_use[par_indices] = current_pars[parent_chain_indices[3],par_indices] +
     step_size*(current_pars[parent_chain_indices[1],par_indices] -
-                 current_pars[parent_chain_indices[2],par_indices]) +
+                     current_pars[parent_chain_indices[2],par_indices]) +
     stats::runif(1,-jitter_size,jitter_size)
 
   pars_use = matrix(pars_use,1,len_par_use)
 
   # get log weight
-  weight_proposal = objFun(pars_use,...)
+  weight_proposal = ELBO(pars_use,
+                         LogPostLike,
+                         control_pars,
+                         S,...)
   if(is.na(weight_proposal))weight_proposal = -Inf
 
   # greedy acceptance rule

@@ -1,3 +1,94 @@
+
+
+PurifyVI=function(chain_index,
+                  current_pars,
+                  current_weight,
+                  LogPostLike,
+                  n_chains,
+                  control_pars,
+                  S, ... ){
+
+  # get statistics about chain
+  weight_use = current_weight[chain_index]
+  pars_use = current_pars[chain_index,]
+  len_par_use = length(pars_use)
+
+  pars_use = matrix(pars_use,1,len_par_use)
+
+  # get log weight
+  weight_proposal = ELBO(pars_use,
+                         LogPostLike,
+                         control_pars,
+                         S,...)
+
+  if(is.na(weight_proposal))weight_proposal = -Inf
+
+  # greedy acceptance rule
+  if(is.finite(weight_proposal)) {
+    current_pars[chain_index,] <- pars_use
+    current_weight[chain_index] <- weight_proposal
+  }
+
+  return(c(current_weight[chain_index],current_pars[chain_index,]))
+
+}
+
+
+CrossoverVI=function(chain_index,
+                     current_pars,
+                     current_weight,
+                     LogPostLike,
+                     step_size=.8,
+                     jitter_size=1e-6,
+                     n_chains,
+                     crossover_rate=1,
+                     control_pars,
+                     S, ... ){
+
+  # get statistics about chain
+  weight_use = current_weight[chain_index]
+  pars_use = current_pars[chain_index,]
+  len_par_use = length(pars_use)
+
+  # use binomial to sample which pars to update matching crossover rate frequency
+  par_idices_bool = stats::rbinom(len_par_use, prob = crossover_rate, size=1)
+
+  # if no pars selected, randomly sample 1 parameter
+  if(all(par_idices_bool==0)){
+    par_idices_bool[sample(x=1:len_par_use,size=1)] <- 1
+  }
+
+  # indices of parameters to be updated
+  par_indices=seq(1,len_par_use,by=1)[as.logical(par_idices_bool)]
+
+  # sample parent chains
+  parent_chain_indices = sample(c(1:n_chains)[-chain_index],3,replace=F)
+
+  # mate parents for proposal
+  pars_use[par_indices] = current_pars[parent_chain_indices[3],par_indices] +
+    runif(1,.5,1)*(current_pars[parent_chain_indices[1],par_indices] -
+                     current_pars[parent_chain_indices[2],par_indices]) +
+    stats::runif(1,-jitter_size,jitter_size)
+
+  pars_use = matrix(pars_use,1,len_par_use)
+
+  # get log weight
+  weight_proposal = ELBO(pars_use,
+                         LogPostLike,
+                         control_pars,
+                         S,...)
+  if(is.na(weight_proposal))weight_proposal = -Inf
+
+  # greedy acceptance rule
+  if(weight_proposal > weight_use) {
+    current_pars[chain_index,] <- pars_use
+    current_weight[chain_index] <- weight_proposal
+  }
+
+  return(c(current_weight[chain_index],current_pars[chain_index,]))
+
+}
+
 QLog=function(use_theta,use_lambda,control_pars,S=1){
   # returns log density Q(theta|lambda)
   out=0
@@ -6,12 +97,11 @@ QLog=function(use_theta,use_lambda,control_pars,S=1){
                    sd=rep(exp(use_lambda[((control_pars$n_pars_model)+1):(control_pars$n_pars_dist)]),S),
                    log=T)
   out[(out==-Inf) | is.na(out)]=control_pars$neg_inf
-  return(sum(out));
+  return(sum(out)/S);
 }
 
 QSample=function(use_lambda,control_pars,S){
   # returns a collapsed vector for a S by n_pars_model matrix sampled from Q(theta|lambda)
-  out=matrix(NA,S,control_pars$n_pars_model)
   if(control_pars$use_QMC==T){
     if(control_pars$quasi_rand_seq=='sobol')quantileMat=c(t(randtoolbox::sobol(S,control_pars$n_pars_model)))
     if(control_pars$quasi_rand_seq=='halton')quantileMat=c(t(randtoolbox::halton(S,control_pars$n_pars_model)))
@@ -34,8 +124,8 @@ KLHat=function(lambda,LogPostLike,control_pars,S,...){
 
   # calc mean differences in log densities for theta_mat
   q_log_density=QLog(theta_mat,use_lambda = lambda,control_pars,S)
-  post_log_density=apply(matrix(theta_mat,ncol=control_pars$n_pars_model,byrow = T),MARGIN = 1,FUN=LogPostLike,...)
-  out <- mean(q_log_density-post_log_density)
+  post_log_density=mean(apply(matrix(theta_mat,ncol=control_pars$n_pars_model,byrow = T),MARGIN = 1,FUN=LogPostLike,...))
+  out <- q_log_density-post_log_density
 
 
   return(out)
@@ -337,6 +427,7 @@ AlgoParsDEVI=function(n_pars,
            'n_cores_use'=n_cores_use,
            'step_size'=step_size,
            'jitter_size'=jitter_size,
+           'crossover_rate'=crossover_rate,
            'parallel_type'=parallel_type,
            'return_trace'=return_trace,
            'purify'=Inf,
@@ -345,6 +436,7 @@ AlgoParsDEVI=function(n_pars,
            'n_samples_ELBO'=n_samples_ELBO,
            'n_samples_LRVB'=n_samples_LRVB,
            'LRVB_correction'=LRVB_correction,
+           'thin'=thin,
            'neg_inf'=neg_inf,
            'n_pars_dist'=2*n_pars,
            'n_iters_per_chain'=n_iters_per_chain)
@@ -352,25 +444,25 @@ AlgoParsDEVI=function(n_pars,
   return(out)
 }
 
-dataExample=matrix(stats::rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = TRUE)
+dataExample=matrix(stats::rnorm(200,c(-1,1),c(.1,.1)),nrow=50,ncol=2,byrow = TRUE)
 ##list parameter names
 par_names_example=c("mu_1","mu_2")
 
 #log posterior likelihood function = log likelihood + log prior | returns a scalar
 LogPostLikeExample=function(x,data,par_names){
- out=0
+  out=0
 
- names(x)<-par_names
+  names(x)<-par_names
 
- # log prior
- out=out+sum(dnorm(x["mu_1"],0,sd=1,log=TRUE))
- out=out+sum(dnorm(x["mu_2"],0,sd=1,log=TRUE))
+  # log prior
+  out=out+sum(dnorm(x["mu_1"],0,sd=1,log=TRUE))
+  out=out+sum(dnorm(x["mu_2"],0,sd=1,log=TRUE))
 
- # log likelihoods
- out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=TRUE))
- out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=TRUE))
+  # log likelihoods
+  out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=TRUE))
+  out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=TRUE))
 
- return(out)
+  return(out)
 }
 
 DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
@@ -390,11 +482,11 @@ DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
   for(chain_idx in 1:control_pars$n_chains){
     count=0
     while (ELBO_values[1,chain_idx]  == -Inf) {
-      lambda[1,chain_idx,] <- stats::rnorm(control_pars$n_pars,
+      lambda[1,chain_idx,] <- stats::rnorm(control_pars$n_pars_dist,
                                            control_pars$init_center,
                                            control_pars$init_sd)
 
-      ELBO_values[1,chain_idx] <- ELBO(lambda[1,chain_idx,],...)
+      ELBO_values[1,chain_idx] <- ELBO(lambda[1,chain_idx,],LogPostLike,control_pars,S=control_pars$n_samples_ELBO,...)
       count=count+1
       if(count>100){
         stop('chain initialization failed.
@@ -418,45 +510,91 @@ DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
                                     type=control_pars$parallel_type)
   }
 
-  print("running DE to find MAP")
+  print("running DE to find best variational approximation")
   lambdaIdx=1
   for(iter in 1:control_pars$n_iter){
 
+    #####################
+    ####### crossover
+    #####################
     if(control_pars$parallel_type=='none'){
-      # cross over step
-      temp=matrix(unlist(lapply(1:control_pars$n_chains,CrossoverOptimize,
+      temp=matrix(unlist(lapply(1:control_pars$n_chains,CrossoverVI,
                                 current_pars=lambda[lambdaIdx,,],  # current parameter values for chain (numeric vector)
                                 current_weight=ELBO_values[lambdaIdx,], # corresponding log like for (numeric vector)
-                                objFun=LogPostLike, # log likelihood function (returns scalar)
+                                LogPostLike=LogPostLike, # log likelihood function (returns scalar)
                                 step_size=control_pars$step_size,
                                 jitter_size=control_pars$jitter_size,
                                 n_chains=control_pars$n_chains,
-                                crossover_rate=control_pars$crossover_rate,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
+                                crossover_rate=control_pars$crossover_rate,
+                                control_pars=control_pars,
+                                S=control_pars$n_samples_ELBO,...)),
+                  nrow=control_pars$n_chains,
+                  ncol=control_pars$n_pars_dist+1,byrow=T)
     } else {
-      temp=matrix(unlist(parallel::parLapply(cl_use,1:control_pars$n_chains,CrossoverOptimize,
+      temp=matrix(unlist(parallel::parLapply(cl_use,1:control_pars$n_chains,CrossoverVI,
                                              current_pars=lambda[lambdaIdx,,],  # current parameter values for chain (numeric vector)
                                              current_weight=ELBO_values[lambdaIdx,], # corresponding log like for (numeric vector)
-                                             objFun=ELBO, # log likelihood function (returns scalar)
+                                             LogPostLike=LogPostLike, # log likelihood function (returns scalar)
                                              step_size=control_pars$step_size,
                                              jitter_size=control_pars$jitter_size,
                                              n_chains=control_pars$n_chains,
-                                             crossover_rate=control_pars$crossover_rate,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
+                                             crossover_rate=control_pars$crossover_rate,
+                                             control_pars,
+                                             S=control_pars$n_samples_ELBO,...)),
+                  control_pars$n_chains,
+                  control_pars$n_pars_dist+1,byrow=T)
 
     }
+    # update particle chains
     ELBO_values[lambdaIdx,]=temp[,1]
-    lambda[lambdaIdx,,]=temp[,2:(control_pars$n_pars+1)]
+    lambda[lambdaIdx,,]=temp[,2:(control_pars$n_pars_dist+1)]
     if(iter<control_pars$n_iter){
       ELBO_values[lambdaIdx+1,]=temp[,1]
-      lambda[lambdaIdx+1,,]=temp[,2:(control_pars$n_pars+1)]
+      lambda[lambdaIdx+1,,]=temp[,2:(control_pars$n_pars_dist+1)]
     }
-    #   # purification step
-    #   if(iter%%purify.rate==0){
-    #     temp=unlist(lapply(1:n_chains,PurifyMC,
-    #                                 current_lambda=lambda[iter,],  # current parameter values for chain (numeric vector)
-    #                                 current_log_post_like=log_post_like[iter,], # corresponding log like for (numeric vector)
-    #                                 LogPostLike=LogPostLike)) # log likelihood function (returns scalar),n.chains,n.pars+1,byrow=T)
-    #     log_post_like[iter,]=temp
-    #   }
+
+    #####################
+    ####### purify
+    #####################
+    if(iter%%control_pars$purify==0){
+
+      if(control_pars$parallel_type=='none'){
+        temp=matrix(unlist(lapply(1:control_pars$n_chains,PurifyVI,
+                                  current_pars=lambda[lambdaIdx,,],  # current parameter values for chain (numeric vector)
+                                  current_weight=ELBO_values[lambdaIdx,], # corresponding log like for (numeric vector)
+                                  LogPostLike=LogPostLike, # log likelihood function (returns scalar)
+                                  n_chains=control_pars$n_chains,
+                                  control_pars=control_pars,
+                                  S=control_pars$n_samples_ELBO,...)),
+                    nrow=control_pars$n_chains,
+                    ncol=control_pars$n_pars_dist+1,byrow=T)
+      } else {
+        temp=matrix(unlist(parallel::parLapply(cl_use,1:control_pars$n_chains,PurifyVI,
+                                               current_pars=lambda[lambdaIdx,,],  # current parameter values for chain (numeric vector)
+                                               current_weight=ELBO_values[lambdaIdx,], # corresponding log like for (numeric vector)
+                                               LogPostLike=LogPostLike, # log likelihood function (returns scalar)
+                                               step_size=control_pars$step_size,
+                                               jitter_size=control_pars$jitter_size,
+                                               n_chains=control_pars$n_chains,
+                                               crossover_rate=control_pars$crossover_rate,
+                                               control_pars,
+                                               S=control_pars$n_samples_ELBO,...)),
+                    control_pars$n_chains,
+                    control_pars$n_pars_dist+1,byrow=T)
+
+      }
+
+      # update particle chains
+      ELBO_values[lambdaIdx,]=temp[,1]
+      lambda[lambdaIdx,,]=temp[,2:(control_pars$n_pars_dist+1)]
+      if(iter<control_pars$n_iter){
+        ELBO_values[lambdaIdx+1,]=temp[,1]
+        lambda[lambdaIdx+1,,]=temp[,2:(control_pars$n_pars_dist+1)]
+      }
+    }
+
+
+
 
     if(iter%%100==0)print(paste0('iter ',iter,'/',control_pars$n_iter))
     if(iter%%control_pars$thin==0){
@@ -470,17 +608,38 @@ DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
   }
   maxIdx=which.max(ELBO_values[control_pars$n_iters_per_chain,])
 
+  means=lambda[control_pars$n_iters_per_chain,
+               maxIdx,1:control_pars$n_pars_model]
+  names(means)<-paste0(control_pars$par_names,"_mean")
+
+  covariance=diag(exp(2*lambda[control_pars$n_iters_per_chain,
+                               maxIdx,(control_pars$n_pars_model+1):control_pars$n_pars_dist]))
+
+
   if(control_pars$return_trace==T){
-    return(list('mapEst'=lambda[control_pars$n_iters_per_chain,
-                                maxIdx,1:control_pars$n_pars_model],
-                'ELBO_values'=ELBO_values[control_pars$n_iters_per_chain,maxIdx],
+    return(list('means'=means,
+                'covariance'=covariance,
+                'ELBO'=ELBO_values[control_pars$n_iters_per_chain,maxIdx],
                 'lambda_trace'=lambda,
-                'ELBO_values_trace'=ELBO_values,
+                'ELBO_trace'=ELBO_values,
                 'control_pars'=control_pars))
   } else {
-    return(list('mapEst'=lambda[control_pars$n_iters_per_chain,maxIdx,],
-                'ELBO_values'=ELBO_values[control_pars$n_iters_per_chain,maxIdx],
+    return(list('means'=means,
+                'covariance'=covariance,
+                'ELBO'=ELBO_values[control_pars$n_iters_per_chain,maxIdx],
                 'control_pars'=control_pars))
   }
 }
 
+out=DEVI(LogPostLike=LogPostLikeExample,
+         control_pars=AlgoParsDEVI(n_pars=length(par_names_example),
+                                   n_iter=200,
+                                   n_samples_ELBO = 5,
+                                   n_chains=25,return_trace=T,crossover_rate = .8,use_QMC = T),
+         data=dataExample,
+         par_names = par_names_example)
+par(mfrow=c(2,2))
+matplot(out$lambda_trace[,,2],type="l")
+matplot(out$lambda_trace[,,1],type="l")
+matplot(out$lambda_trace[,,3],type="l")
+matplot(out$lambda_trace[,,4],type="l")

@@ -14,6 +14,7 @@
 #' @param return_trace boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_pars array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running algorithm for longer.
 #' @param burnin number of initial iterations to discard. Default value is 0.
+#' @param purify an integer, every 'purif'-th interation, the monte carlo estimator of the ELBO is recalculated. This can help deal with noisy and outlier estimates of the ELBO. Default value is 25. If use_QMC is TRUE, purification is disabled as it is redundant.
 #' @param n_samples_ELBO number of samples used for the monte carlo estimator ot the ELBO (the objective function). default is 10.
 #' @param use_QMC boolean, if true, a quasi-monte carlo estimator is used to estimate ELBO during optimization. default is TRUE.
 #' @param LRVB_correction boolean, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.
@@ -24,6 +25,7 @@
 #' @export
 
 AlgoParsDEVI=function(n_pars,
+                      par_names=NULL,
                       n_chains = NULL,
                       n_iter = 1000,
                       init_sd = 0.01,
@@ -33,14 +35,16 @@ AlgoParsDEVI=function(n_pars,
                       jitter_size = 1e-6,
                       parallel_type = 'none',
                       use_QMC = T,
-                      quasi_rand_seq = 'sobol',
+                      purify=NULL,
+                      quasi_rand_seq = 'halton',
                       n_samples_ELBO = 10,
                       LRVB_correction = TRUE,
                       n_samples_LRVB = 25,
                       neg_inf = -750,
                       thin = 1,
                       burnin = 0,
-                      return_trace = FALSE){
+                      return_trace = FALSE,
+                      crossover_rate=1){
   # n_pars
   ### catch errors
   n_pars=as.integer(n_pars)
@@ -50,6 +54,7 @@ AlgoParsDEVI=function(n_pars,
     stop('ERROR: n_pars must be a postitive integer scalar')
   }
 
+
   # par_names
   ### catch errors
   if(is.null(par_names)){
@@ -58,7 +63,7 @@ AlgoParsDEVI=function(n_pars,
     stop('ERROR: par_names does not match size of n_pars')
   }
 
-  dist_par_names=c(paste0(par_name,'_MEAN'),paste0(par_name,'_VAR'))
+  dist_par_names=c(paste0(par_names,'_MEAN'),paste0(par_names,'_VAR'))
 
   # n_chains
   ### if null assign default value
@@ -97,7 +102,7 @@ AlgoParsDEVI=function(n_pars,
   } else if(!(length(init_sd)==1 | length(init_sd)==n_pars)){
     stop('ERROR: init_sd vector length must be 1 or n_pars')
   }
-  if(any(init_sd)){
+  if(any(init_sd==0)){
     warning('WARNING an init_sd value is 0')
   }
 
@@ -300,7 +305,23 @@ AlgoParsDEVI=function(n_pars,
            n_iters_per_chain=floor((n_iter-burnin)/thin)')
   }
 
-  out=list('n_pars_models'=n_pars,
+  # purify
+  ### default values
+  purify=as.integer(purify)
+  if(any(is.null(purify))){
+    purify=25
+  }
+  if(use_QMC==TRUE){
+    purify=n_iter+1
+  }
+  ### catch errors
+  if(any(!is.finite(purify))){
+    stop('ERROR:purify is not finite')
+  }  else if( purify<1 | length(purify)>1){
+    stop('ERROR: purify must be a postitive integer scalar')
+  }
+
+  out=list('n_pars_model'=n_pars,
            'par_names'=par_names,
            'n_chains'=n_chains,
            'n_iter'=n_iter,
@@ -309,18 +330,19 @@ AlgoParsDEVI=function(n_pars,
            'n_cores_use'=n_cores_use,
            'step_size'=step_size,
            'jitter_size'=jitter_size,
+           'crossover_rate'=crossover_rate,
            'parallel_type'=parallel_type,
            'return_trace'=return_trace,
-           'purify'=Inf,
+           'purify'=purify,
            'use_QMC'=use_QMC,
            'quasi_rand_seq'=quasi_rand_seq,
            'n_samples_ELBO'=n_samples_ELBO,
            'n_samples_LRVB'=n_samples_LRVB,
            'LRVB_correction'=LRVB_correction,
+           'thin'=thin,
            'neg_inf'=neg_inf,
            'n_pars_dist'=2*n_pars,
            'n_iters_per_chain'=n_iters_per_chain)
 
   return(out)
 }
-

@@ -126,4 +126,35 @@ par(mfrow=c(2,2))
 
 ```
 
+
+```{r DEVIexample}
+
+# # optimize KL between approximating distribution Q (mean-field approximation) and posterior
+# vb <- DEVI(LogPostLike=LogPostLikeExample,
+#                   control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
+#                                      n_iter=100, 
+#                                      n_chains=12, return_trace = T),
+#                   data=dataExample,
+#                   par_names = par_names_example)
+# 
+# 
+#   print(paste0('posterior means:',round(vb$means,2)))
+#   print(paste0('posterior covariances:',round(vb$covariances,2)))
+#   
+# par(mfrow=c(2,2))
+#   
+#   # plot particle trace plot for mu 1
+#   matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(par_names_example[1],"mean"),xlab="iteration",lwd=2)
+#   matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(par_names_example[2],"mean"),xlab="iteration",lwd=2)
+#   
+#   matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(par_names_example[1],"log sd"),xlab="iteration",lwd=2)
+#   matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(par_names_example[2],"log sd"),xlab="iteration",lwd=2)
+# 
+# par(mfrow=c(1,2))
+#   matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
+#   
+
+
+```
+
 s

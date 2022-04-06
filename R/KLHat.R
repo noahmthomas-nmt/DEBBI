@@ -15,9 +15,9 @@ KLHat=function(lambda,LogPostLike,control_pars,S,...){
   theta_mat <- QSample(use_lambda=lambda,control_pars,S)
 
   # calc mean differences in log densities for theta_mat
-  q_log_density=apply(theta_mat,c(1),func=QLog,use_lambda = lambda,control_pars)
-  post_log_density=apply(theta_mat,c(1),func=LogPostLike,...)
-  out <- mean(q_log_density-post_log_density)
+  q_log_density=QLog(theta_mat,use_lambda = lambda,control_pars,S)
+  post_log_density=mean(apply(matrix(theta_mat,ncol=control_pars$n_pars_model,byrow = T),MARGIN = 1,FUN=LogPostLike,...))
+  out <- q_log_density-post_log_density
 
 
   return(out)

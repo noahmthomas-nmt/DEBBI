@@ -43,7 +43,7 @@ LogPostLikeExample=function(x,data,par_names){
 }
 
 # Get map estimates
-DEVI(LogPostLike=LogPostLikeExample,
+DEMAP(LogPostLike=LogPostLikeExample,
       control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
                                   n_iter=1000,
                                   n_chains=12),

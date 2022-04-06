@@ -6,17 +6,14 @@
 #' @noRd
 
 QSample=function(use_lambda,control_pars,S){
-  #returns a S by n_pars_model matrix sampled from Q(theta|lambda)
-  out=matrix(NA,S,control_pars$n_pars_model)
+  # returns a collapsed vector for a S by n_pars_model matrix sampled from Q(theta|lambda)
   if(control_pars$use_QMC==T){
-    if(control_pars$quasiSeq=='sobol')quantileMat=randtoolbox::sobol(S,control_pars$n_pars_model)
-    if(control_pars$quasiSeq=='halton')quantileMat=randtoolbox::halton(S,control_pars$n_pars_model)
+    if(control_pars$quasi_rand_seq=='sobol')quantileMat=c(t(randtoolbox::sobol(S,control_pars$n_pars_model)))
+    if(control_pars$quasi_rand_seq=='halton')quantileMat=c(t(randtoolbox::halton(S,control_pars$n_pars_model)))
   } else {
-    quantileMat=matrix(stats::runif(S,0,1),S,control_pars$n_pars_model)
+    quantileMat=stats::runif(S*control_pars$n_pars_model,0,1)
   }
-  for(i in 1:n_pars_model){
-    qs=quantileMat[,i]
-    out[,i]=stats::qnorm(qs,use_lambda[i],exp(use_lambda[control_pars$n_pars_model+i]))
-  }
+
+  out=stats::qnorm(quantileMat,rep(use_lambda[1:control_pars$n_pars_model],S),rep(exp(use_lambda[(control_pars$n_pars_model+1):(control_pars$n_pars_dist)]),S))
   return(out)
 }

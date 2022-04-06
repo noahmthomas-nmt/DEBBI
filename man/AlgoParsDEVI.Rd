@@ -6,6 +6,7 @@
 \usage{
 AlgoParsDEVI(
   n_pars,
+  par_names = NULL,
   n_chains = NULL,
   n_iter = 1000,
   init_sd = 0.01,
@@ -15,15 +16,22 @@ AlgoParsDEVI(
   jitter_size = 1e-06,
   parallel_type = "none",
   use_QMC = T,
-  qmc_type = "sobol",
+  purify = NULL,
+  quasi_rand_seq = "halton",
   n_samples_ELBO = 10,
-  LRVB_correction = T,
+  LRVB_correction = TRUE,
   n_samples_LRVB = 25,
-  neg_inf = -750
+  neg_inf = -750,
+  thin = 1,
+  burnin = 0,
+  return_trace = FALSE,
+  crossover_rate = 1
 )
 }
 \arguments{
 \item{n_pars}{number of free parameters estimated}
+
+\item{par_names}{optional vector of parameter names}
 
 \item{n_chains}{number of particle chains used for optimization, 3*n_pars is the default value}
 
@@ -43,6 +51,10 @@ AlgoParsDEVI(
 
 \item{use_QMC}{boolean, if true, a quasi-monte carlo estimator is used to estimate ELBO during optimization. default is TRUE.}
 
+\item{purify}{an integer, every 'purif'-th interation, the monte carlo estimator of the ELBO is recalculated. This can help deal with noisy and outlier estimates of the ELBO. Default value is 25. If use_QMC is TRUE, purification is disabled as it is redundant.}
+
+\item{quasi_rand_seq}{type of low discrepancy sequence used for quasi monte carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.}
+
 \item{n_samples_ELBO}{number of samples used for the monte carlo estimator ot the ELBO (the objective function). default is 10.}
 
 \item{LRVB_correction}{boolean, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.}
@@ -51,17 +63,13 @@ AlgoParsDEVI(
 
 \item{neg_inf}{if density for a given value of theta is numerically 0 for q, this value is assigned for log density. This helps with numeric stability of algorithm. Default value is -750.}
 
-\item{par_names}{optional vector of parameter names}
-
-\item{crossover_rate}{number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.}
-
-\item{return_trace}{boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_pars array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
-
 \item{thin}{positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running algorithm for longer.}
 
 \item{burnin}{number of initial iterations to discard. Default value is 0.}
 
-\item{quasi_rand_seq}{type of low discrepancy sequence used for quasi monte carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.}
+\item{return_trace}{boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_pars array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
+
+\item{crossover_rate}{number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.}
 }
 \value{
 list of control parameters for the DEVI function
