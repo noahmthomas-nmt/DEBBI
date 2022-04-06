@@ -163,31 +163,66 @@ par(mfrow=c(2,2))
 
 <img src="man/figures/README-DEMAP example-1.png" width="100%" />
 
+## DEVI Example
+
+Optimize parameters lambda of Q(theta\|lambda) to minimize the KL
+Divergence (maximize the ELBO) between Q and the likelihood\*prior
+
 ``` r
-# # optimize KL between approximating distribution Q (mean-field approximation) and posterior
-# vb <- DEVI(LogPostLike=LogPostLikeExample,
-#                   control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
-#                                      n_iter=100, 
-#                                      n_chains=12, return_trace = T),
-#                   data=dataExample,
-#                   par_names = par_names_example)
-# 
-# 
-#   print(paste0('posterior means:',round(vb$means,2)))
-#   print(paste0('posterior covariances:',round(vb$covariances,2)))
-#   
-# par(mfrow=c(2,2))
-#   
-#   # plot particle trace plot for mu 1
-#   matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(par_names_example[1],"mean"),xlab="iteration",lwd=2)
-#   matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(par_names_example[2],"mean"),xlab="iteration",lwd=2)
-#   
-#   matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(par_names_example[1],"log sd"),xlab="iteration",lwd=2)
-#   matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(par_names_example[2],"log sd"),xlab="iteration",lwd=2)
-# 
-# par(mfrow=c(1,2))
-#   matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
-#   
+# optimize KL between approximating distribution Q (mean-field approximation) and posterior
+vb <- DEVI(LogPostLike=LogPostLikeExample,
+                  control_pars=AlgoParsDEVI(n_pars=length(par_names_example),
+                                     n_iter=200,
+                                     n_chains=12, return_trace = T),
+                  data=dataExample,
+                  par_names = par_names_example)
+#> [1] "initalizing chains..."
+#> [1] "1 / 12"
+#> [1] "2 / 12"
+#> [1] "3 / 12"
+#> [1] "4 / 12"
+#> [1] "5 / 12"
+#> [1] "6 / 12"
+#> [1] "7 / 12"
+#> [1] "8 / 12"
+#> [1] "9 / 12"
+#> [1] "10 / 12"
+#> [1] "11 / 12"
+#> [1] "12 / 12"
+#> [1] "chain initialization complete  :)"
+#> [1] "running DE to find best variational approximation"
+#> [1] "iter 100/200"
+#> [1] "iter 200/200"
+
+
+  # posterior means
+  print((round(vb$means,2)))
+#> par1_mean par2_mean 
+#>     -1.06      0.90
+
+  # posterior covariance
+  print(round(vb$covariance,3))
+#>       [,1]  [,2]
+#> [1,] 0.035 0.000
+#> [2,] 0.000 0.026
+        
+par(mfrow=c(2,2))
+
+  # plot particle trace plot for mu 1
+  matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(par_names_example[1]," mean"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(par_names_example[2]," mean"),xlab="iteration",lwd=2)
+
+  matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(par_names_example[1]," log sd"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(par_names_example[2]," log sd"),xlab="iteration",lwd=2)
 ```
+
+<img src="man/figures/README-DEVIexample-1.png" width="100%" />
+
+``` r
+par(mfrow=c(1,1))
+  matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
+```
+
+<img src="man/figures/README-DEVIexample-2.png" width="100%" />
 
 s

@@ -40,6 +40,7 @@
 #'                                   par_names = par_names_example)
 
 
+
 DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
 
   # import values we will reuse throughout process
