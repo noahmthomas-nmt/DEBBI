@@ -107,8 +107,9 @@ par(mfrow=c(2,2))
   abline(h=1,lwd=3)
 ```
 
-<img src="man/figures/README-DEMCMC example-1.png" width="100%" /> ##
-DEMAP Example
+<img src="man/figures/README-DEMCMC example-1.png" width="100%" />
+
+## DEMAP Example
 
 Find posterior mode (a.k.a. maximum a posteriori or MAP) of mean
 parameters of two independent normal distributions with known standard

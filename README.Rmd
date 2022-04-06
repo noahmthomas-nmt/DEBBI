@@ -90,7 +90,8 @@ par(mfrow=c(2,2))
 
 
 ```
-## DEMAP Example
+
+## DEMAP Example 
 
 Find posterior mode (a.k.a. maximum a posteriori or MAP) of mean parameters of two independent normal distributions with known standard deviations using DE
 
@@ -126,7 +127,7 @@ par(mfrow=c(2,2))
 
 ```
 
-## DEVI Example
+## DEVI Example 
 
 Optimize parameters lambda of Q(theta|lambda) to minimize the KL Divergence (maximize the ELBO) between Q and the likelihood*prior
 ```{r DEVIexample}
