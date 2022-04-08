@@ -116,6 +116,8 @@ parameters of two independent normal distributions with known standard
 deviations using DE
 
 ``` r
+devtools::load_all()
+#> ℹ Loading DEBBI
 # optimize posterior wrt to theta
 map <- DEMAP(LogPostLike=LogPostLikeExample,
                   control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
@@ -194,6 +196,7 @@ vb <- DEVI(LogPostLike=LogPostLikeExample,
 #> [1] "running DE to find best variational approximation"
 #> [1] "iter 100/200"
 #> [1] "iter 200/200"
+#> [1] "Attemtping LRVB covariance correction."
 
 
   # posterior means
@@ -203,9 +206,9 @@ vb <- DEVI(LogPostLike=LogPostLikeExample,
 
   # posterior covariance
   print(round(vb$covariance,3))
-#>       [,1]  [,2]
-#> [1,] 0.035 0.000
-#> [2,] 0.000 0.026
+#>      [,1] [,2]
+#> [1,] 0.02 0.00
+#> [2,] 0.00 0.02
         
 par(mfrow=c(2,2))
 

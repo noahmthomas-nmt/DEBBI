@@ -197,13 +197,15 @@ DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
     control_pars_LRVB$use_QMC <- TRUE
     hess=numDeriv::hessian(KLHatforLRVB,c(means,diag(covariance)),
                                           method="Richardson", method.args=list(),
+                                          LogPostLike,
                                           control_pars=control_pars_LRVB,
                                           S=control_pars$n_samples_LRVB,...)
-    if(any(round(eigen(hess)$values,4))<0){
+    if(any(round(eigen(hess)$values,4)<0)){
       warning("LRVB correction failed, optimization did not reach the neighborhood of a local optima. Returning mean field approximation.")
     } else {
+      print("LRVB correction was a success!")
       hess.inv=solve(hess)
-      covariance <- hess.inv[1:n.pars.model,1:n.pars.model]
+      covariance <- hess.inv[1:control_pars$n_pars_model,1:control_pars$n_pars_model]
     }
   }
   if(control_pars$return_trace==T){
