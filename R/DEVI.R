@@ -191,7 +191,21 @@ DEVI=function(LogPostLike,control_pars=AlgoParsDEVI(),...){
   covariance=diag(exp(2*lambda[control_pars$n_iters_per_chain,
                                maxIdx,(control_pars$n_pars_model+1):control_pars$n_pars_dist]))
 
-
+  if(control_pars$LRVB_correction==T){
+    print("Attemtping LRVB covariance correction.")
+    control_pars_LRVB=control_pars
+    control_pars_LRVB$use_QMC <- TRUE
+    hess=numDeriv::hessian(KLHatforLRVB,c(means,diag(covariance)),
+                                          method="Richardson", method.args=list(),
+                                          control_pars=control_pars_LRVB,
+                                          S=control_pars$n_samples_LRVB,...)
+    if(any(round(eigen(hess)$values,4))<0){
+      warning("LRVB correction failed, optimization did not reach the neighborhood of a local optima. Returning mean field approximation.")
+    } else {
+      hess.inv=solve(hess)
+      covariance <- hess.inv[1:n.pars.model,1:n.pars.model]
+    }
+  }
   if(control_pars$return_trace==T){
     return(list('means'=means,
                 'covariance'=covariance,
