@@ -11,6 +11,8 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+devtools::load_all(quiet=TRUE)
+
 ```
 
 # DEBBI
@@ -96,7 +98,7 @@ par(mfrow=c(2,2))
 Find posterior mode (a.k.a. maximum a posteriori or MAP) of mean parameters of two independent normal distributions with known standard deviations using DE
 
 ```{r DEMAP example}
-devtools::load_all()
+
 # optimize posterior wrt to theta
 map <- DEMAP(LogPostLike=LogPostLikeExample,
                   control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
