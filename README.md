@@ -174,7 +174,9 @@ Divergence (maximize the ELBO) between Q and the likelihood\*prior
 vb <- DEVI(LogPostLike=LogPostLikeExample,
                   control_params=AlgoParamsDEVI(n_params=length(param_names_example),
                                      n_iter=200,
-                                     n_chains=12, return_trace = T),
+                                     n_samples_ELBO = 20,
+                                     n_chains=12,use_QMC = T,
+                                     return_trace = T),
                   data=dataExample,
                   param_names = param_names_example)
 #> initalizing chains...
@@ -195,19 +197,16 @@ vb <- DEVI(LogPostLike=LogPostLikeExample,
 #> iter 100/200
 #> iter 200/200
 #> Attemtping LRVB covariance correction.
-#> Warning in DEVI(LogPostLike = LogPostLikeExample, control_params =
-#> AlgoParamsDEVI(n_params = length(param_names_example), : LRVB correction failed,
-#> optimization did not reach the neighborhood of a local optima. Returning mean
-#> field approximation.
+#> LRVB correction was a success!
 
 
   # posterior means
-  message((round(vb$means,2)))
-#> -0.380.02
+  message(paste(round(vb$means,2)))
+#> -1.050.88
 
   # posterior covariance
-  message(round(vb$covariance,3))
-#> 0.54000.687
+  message(paste(round(vb$covariance,3)))
+#> 0.02000.02
         
 par(mfrow=c(2,2))
 

@@ -138,16 +138,18 @@ Optimize parameters lambda of Q(theta|lambda) to minimize the KL Divergence (max
 vb <- DEVI(LogPostLike=LogPostLikeExample,
                   control_params=AlgoParamsDEVI(n_params=length(param_names_example),
                                      n_iter=200,
-                                     n_chains=12, return_trace = T),
+                                     n_samples_ELBO = 20,
+                                     n_chains=12,use_QMC = T,
+                                     return_trace = T),
                   data=dataExample,
                   param_names = param_names_example)
 
 
   # posterior means
-  message((round(vb$means,2)))
+  message(paste(round(vb$means,2)))
 
   # posterior covariance
-  message(round(vb$covariance,3))
+  message(paste(round(vb$covariance,3)))
         
 par(mfrow=c(2,2))
 
