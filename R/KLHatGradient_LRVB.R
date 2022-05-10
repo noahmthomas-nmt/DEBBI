@@ -1,12 +1,12 @@
-#' KLHatforLRVB
-#' @description returns a monte carlo or quasi-monte carlo estimate of KL divergence up to a constant (negative ELBO). lambda must contain log variance
+#' KLHatGradient_LRVB
+#' @description returns a monte carlo or quasi-monte carlo estimate of KL divergence gradient. lambda must contain variance parameterization of mean field
 #' @param lambda samples of theta from approximating distribution Q
 #' @param LogPostLike  log posterior likelihood function
 #' @param S number of samples to use for the approximation
 #' @param control_params list of algo control parameters
 #' @param ... additional parameters for LogPostLike
 #' @noRd
-KLHatforLRVB <- function(lambda, LogPostLike, control_params, S, ...) {
+KLHatGradient_LRVB <- function(lambda, LogPostLike, control_params, S, ...) {
   # monte carlo approximation KL divergence up to a constant
 
   out <- 0 # initalize output vector
@@ -16,7 +16,7 @@ KLHatforLRVB <- function(lambda, LogPostLike, control_params, S, ...) {
   theta_mat <- QSample(use_lambda = lambda, control_params, S)
 
   # calc mean differences in log densities for theta_mat
-  q_log_density <- sum(QLog(theta_mat, use_lambda = lambda, control_params, S)) / S
+  q_log_density <- QLog(theta_mat, use_lambda = lambda, control_params, S = 1)
   post_log_density <- mean(apply(matrix(theta_mat,
     ncol = control_params$n_params_model, byrow = T
   ),

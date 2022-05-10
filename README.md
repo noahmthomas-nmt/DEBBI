@@ -39,13 +39,13 @@ library(DEBBI)
 dataExample=matrix(rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = T)
 
 # list parameter names
-par_names_example=c("mu_1","mu_2")
+param_names_example=c("mu_1","mu_2")
 
 # log posterior likelihood function = log likelihood + log prior | returns a scalar
-LogPostLikeExample=function(x,data,par_names){
+LogPostLikeExample=function(x,data,param_names){
   out=0
   
-  names(x)<-par_names
+  names(x)<-param_names
   
   # log prior
   out=out+sum(dnorm(x["mu_1"],0,sd=1,log=T))
@@ -60,49 +60,49 @@ LogPostLikeExample=function(x,data,par_names){
 
 # Sample from posterior
 post <- DEMCMC(LogPostLike=LogPostLikeExample,
-                  control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
+                  control_params=AlgoParamsDEMCMC(n_params=length(param_names_example),
                                      n_iter=500, 
                                      n_chains=12,
                                      burnin=100),
                   data=dataExample,
-                  par_names = par_names_example)
-#> [1] "initalizing chains..."
-#> [1] "1 / 12"
-#> [1] "2 / 12"
-#> [1] "3 / 12"
-#> [1] "4 / 12"
-#> [1] "5 / 12"
-#> [1] "6 / 12"
-#> [1] "7 / 12"
-#> [1] "8 / 12"
-#> [1] "9 / 12"
-#> [1] "10 / 12"
-#> [1] "11 / 12"
-#> [1] "12 / 12"
-#> [1] "chain initialization complete  :)"
-#> [1] "running DEMCMC"
-#> [1] "iter 100/500"
-#> [1] "iter 200/500"
-#> [1] "iter 300/500"
-#> [1] "iter 400/500"
-#> [1] "iter 500/500"
+                  param_names = param_names_example)
+#> initalizing chains...
+#> 1 / 12
+#> 2 / 12
+#> 3 / 12
+#> 4 / 12
+#> 5 / 12
+#> 6 / 12
+#> 7 / 12
+#> 8 / 12
+#> 9 / 12
+#> 10 / 12
+#> 11 / 12
+#> 12 / 12
+#> chain initialization complete  :)
+#> running DEMCMC
+#> iter 100/500
+#> iter 200/500
+#> iter 300/500
+#> iter 400/500
+#> iter 500/500
 
 
 par(mfrow=c(2,2))
 
   hist(post$samples[,,1],main="marginal posterior distribution",
-       xlab=par_names_example[1],prob=T)
+       xlab=param_names_example[1],prob=T)
   # plot true parameter value as vertical line
   abline(v=-1,lwd=3)
-  matplot(post$samples[,,1],type='l',ylab=par_names_example[1],
+  matplot(post$samples[,,1],type='l',ylab=param_names_example[1],
           main="chain trace plot",xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=-1,lwd=3)
   
-  hist(post$samples[,,2],xlab=par_names_example[2],prob=T,main="")
+  hist(post$samples[,,2],xlab=param_names_example[2],prob=T,main="")
   # plot true parameter value as vertical line
   abline(v=1,lwd=3)
-  matplot(post$samples[,,2],type='l',ylab=par_names_example[2],xlab="iteration",lwd=2)
+  matplot(post$samples[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=1,lwd=3)
 ```
@@ -118,43 +118,43 @@ deviations using DE
 ``` r
 # optimize posterior wrt to theta
 map <- DEMAP(LogPostLike=LogPostLikeExample,
-                  control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
+                  control_params=AlgoParamsDEMAP(n_params=length(param_names_example),
                                      n_iter=100, 
                                      n_chains=12, return_trace = T),
                   data=dataExample,
-                  par_names = par_names_example)
-#> [1] "initalizing chains..."
-#> [1] "1 / 12"
-#> [1] "2 / 12"
-#> [1] "3 / 12"
-#> [1] "4 / 12"
-#> [1] "5 / 12"
-#> [1] "6 / 12"
-#> [1] "7 / 12"
-#> [1] "8 / 12"
-#> [1] "9 / 12"
-#> [1] "10 / 12"
-#> [1] "11 / 12"
-#> [1] "12 / 12"
-#> [1] "chain initialization complete  :)"
-#> [1] "running DE to find MAP"
-#> [1] "iter 100/100"
+                  param_names = param_names_example)
+#> initalizing chains...
+#> 1 / 12
+#> 2 / 12
+#> 3 / 12
+#> 4 / 12
+#> 5 / 12
+#> 6 / 12
+#> 7 / 12
+#> 8 / 12
+#> 9 / 12
+#> 10 / 12
+#> 11 / 12
+#> 12 / 12
+#> chain initialization complete  :)
+#> running DE to find MAP
+#> iter 100/100
 
 
-  print(paste0('map estimates:',round(map$mapEst,2)))
-#> [1] "map estimates:-1.1" "map estimates:0.88"
-  print(paste0('log posterior likelihood:',round(map$log_post_like,2)))
-#> [1] "log posterior likelihood:-143.05"
+  message(paste0('map estimates:',round(map$mapEst,2)))
+#> map estimates:-1.1map estimates:0.88
+  message(paste0('log posterior likelihood:',round(map$log_post_like,2)))
+#> log posterior likelihood:-143.05
   
 par(mfrow=c(2,2))
   
   # plot particle trace plot for mu 1
-  matplot(map$theta_trace[,,1],type='l',ylab=par_names_example[1],xlab="iteration",lwd=2)
+  matplot(map$theta_trace[,,1],type='l',ylab=param_names_example[1],xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=-1,lwd=3)
   
   # plot particle trace plot for mu 2
-  matplot(map$theta_trace[,,2],type='l',ylab=par_names_example[2],xlab="iteration",lwd=2)
+  matplot(map$theta_trace[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=1,lwd=3)
   
@@ -172,51 +172,51 @@ Divergence (maximize the ELBO) between Q and the likelihood\*prior
 ``` r
 # optimize KL between approximating distribution Q (mean-field approximation) and posterior
 vb <- DEVI(LogPostLike=LogPostLikeExample,
-                  control_pars=AlgoParsDEVI(n_pars=length(par_names_example),
+                  control_params=AlgoParamsDEVI(n_params=length(param_names_example),
                                      n_iter=200,
                                      n_chains=12, return_trace = T),
                   data=dataExample,
-                  par_names = par_names_example)
-#> [1] "initalizing chains..."
-#> [1] "1 / 12"
-#> [1] "2 / 12"
-#> [1] "3 / 12"
-#> [1] "4 / 12"
-#> [1] "5 / 12"
-#> [1] "6 / 12"
-#> [1] "7 / 12"
-#> [1] "8 / 12"
-#> [1] "9 / 12"
-#> [1] "10 / 12"
-#> [1] "11 / 12"
-#> [1] "12 / 12"
-#> [1] "chain initialization complete  :)"
-#> [1] "running DE to find best variational approximation"
-#> [1] "iter 100/200"
-#> [1] "iter 200/200"
-#> [1] "Attemtping LRVB covariance correction."
-#> [1] "LRVB correction was a success!"
+                  param_names = param_names_example)
+#> initalizing chains...
+#> 1 / 12
+#> 2 / 12
+#> 3 / 12
+#> 4 / 12
+#> 5 / 12
+#> 6 / 12
+#> 7 / 12
+#> 8 / 12
+#> 9 / 12
+#> 10 / 12
+#> 11 / 12
+#> 12 / 12
+#> chain initialization complete  :)
+#> running DE to find best variational approximation
+#> iter 100/200
+#> iter 200/200
+#> Attemtping LRVB covariance correction.
+#> Warning in DEVI(LogPostLike = LogPostLikeExample, control_params =
+#> AlgoParamsDEVI(n_params = length(param_names_example), : LRVB correction failed,
+#> optimization did not reach the neighborhood of a local optima. Returning mean
+#> field approximation.
 
 
   # posterior means
-  print((round(vb$means,2)))
-#> par1_mean par2_mean 
-#>     -1.06      0.90
+  message((round(vb$means,2)))
+#> -0.380.02
 
   # posterior covariance
-  print(round(vb$covariance,3))
-#>      [,1] [,2]
-#> [1,] 0.02 0.00
-#> [2,] 0.00 0.02
+  message(round(vb$covariance,3))
+#> 0.54000.687
         
 par(mfrow=c(2,2))
 
   # plot particle trace plot for mu 1
-  matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(par_names_example[1]," mean"),xlab="iteration",lwd=2)
-  matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(par_names_example[2]," mean"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(param_names_example[1]," mean"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(param_names_example[2]," mean"),xlab="iteration",lwd=2)
 
-  matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(par_names_example[1]," log sd"),xlab="iteration",lwd=2)
-  matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(par_names_example[2]," log sd"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(param_names_example[1]," log sd"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(param_names_example[2]," log sd"),xlab="iteration",lwd=2)
 ```
 
 <img src="man/figures/README-DEVIexample-1.png" width="100%" />

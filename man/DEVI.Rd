@@ -4,49 +4,54 @@
 \alias{DEVI}
 \title{DEVI}
 \usage{
-DEVI(LogPostLike, control_pars = AlgoParsDEVI(), ...)
+DEVI(LogPostLike, control_params = AlgoParamsDEVI(), ...)
 }
 \arguments{
-\item{LogPostLike}{function whose first arguement is an n_pars-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
+\item{LogPostLike}{function whose first arguement is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
 
-\item{control_pars}{control parameters for DE algo. see \code{\link{AlgoParsDEVI}} function documentation for more details.}
+\item{control_params}{control parameters for DE algo. see \code{\link{AlgoParamsDEVI}} function documentation for more details.}
 
 \item{...}{additional arguments to pass LogPostLike}
 }
 \value{
-list contain mean in a n_iters_per_chain $x$ n_chains $x$ 2*n_pars_model array and the ELBO of each sample in a n_iters_per_chain x n_chains array.
+list contain mean in a n_iters_per_chain $x$ n_chains $x$ 2*n_params_model array and the ELBO of each sample in a n_iters_per_chain x n_chains array.
 }
 \description{
 DE optimization for mean-field variational inference. Minimizes the KL divergence (maximizes the ELBO) between $q(theta|lambda)$ and the target posterior $p(theta|data)$ For a tutorial on variational inference check out Galdo, Bahg, & Turner 2020.
 }
 \examples{
-#simulate from model
-dataExample=matrix(stats::rnorm(200,c(-1,1),c(.1,.1)),nrow=50,ncol=2,byrow = TRUE)
-##list parameter names
-par_names_example=c("mu_1","mu_2")
+# simulate from model
+dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(.1, .1)), nrow = 50, ncol = 2, byrow = TRUE)
+## list parameter names
+param_names_example <- c("mu_1", "mu_2")
 
-#log posterior likelihood function = log likelihood + log prior | returns a scalar
-LogPostLikeExample=function(x,data,par_names){
-  out=0
+# log posterior likelihood function = log likelihood + log prior | returns a scalar
+LogPostLikeExample <- function(x, data, param_names) {
+  out <- 0
 
-  names(x)<-par_names
+  names(x) <- param_names
 
   # log prior
-  out=out+sum(dnorm(x["mu_1"],0,sd=1,log=TRUE))
-  out=out+sum(dnorm(x["mu_2"],0,sd=1,log=TRUE))
+  out <- out + sum(dnorm(x["mu_1"], 0, sd = 1, log = TRUE))
+  out <- out + sum(dnorm(x["mu_2"], 0, sd = 1, log = TRUE))
 
- # log likelihoods
-  out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=TRUE))
-  out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=TRUE))
+  # log likelihoods
+  out <- out + sum(dnorm(data[, 1], x["mu_1"], sd = 1, log = TRUE))
+  out <- out + sum(dnorm(data[, 2], x["mu_2"], sd = 1, log = TRUE))
 
   return(out)
 }
 
 # Get variational approximation
-DEVI(LogPostLike=LogPostLikeExample,
-      control_pars=AlgoParsDEVI(n_pars=length(par_names_example),
-                                  n_iter=200,
-                                  n_chains=12),
-                                  data=dataExample,
-                                  par_names = par_names_example)
+DEVI(
+  LogPostLike = LogPostLikeExample,
+  control_params = AlgoParamsDEVI(
+    n_params = length(param_names_example),
+    n_iter = 200,
+    n_chains = 12
+  ),
+  data = dataExample,
+  param_names = param_names_example
+)
+
 }

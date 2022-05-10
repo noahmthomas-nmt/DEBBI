@@ -1,132 +1,165 @@
 #' DEMCMC
 #'
 #' @description Sample from Posterior using Differential Evolution Markov Chain Monte Carlo
-#' @param LogPostLike function whose first arguement is an n_pars-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the paramemter vector.
-#' @param control_pars control parameters for DEMCMC algo. see \code{\link{AlgoParsDEMCMC}} function documentation for more details.
+#' @param LogPostLike function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the paramemter vector.
+#' @param control_params control parameters for DEMCMC algo. see \code{\link{AlgoParamsDEMCMC}} function documentation for more details.
 #' @param ... additional arguments to pass LogPostLike
-#' @return list contain posterior samples from DEMCMC in a n_samples_per_chain $x$ n_chains $x$ n_pars array and the log likelihood of each sample in a n_samples_per_chain x n_chains array.
+#' @return list contain posterior samples from DEMCMC in a n_samples_per_chain by n_chains by n_params array and the log likelihood of each sample in a n_samples_per_chain by n_chains array.
 #' @export
 #' @md
 #' @examples
-#' #simulate from model
-#' dataExample=matrix(stats::rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = TRUE)
-#
-#' #list parameter names
-#' par_names_example=c("mu_1","mu_2")
+#' # simulate from model
+#' dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(1, 1)), nrow = 50, ncol = 2, byrow = TRUE)
+#' #
+#' # list parameter names
+#' param_names_example <- c("mu_1", "mu_2")
 #'
-#' #log posterior likelihood function = log likelihood + log prior | returns a scalar
-#' LogPostLikeExample=function(x,data,par_names){
-#'  out=0
+#' # log posterior likelihood function = log likelihood + log prior | returns a scalar
+#' LogPostLikeExample <- function(x, data, param_names) {
+#'   out <- 0
 #'
-#'  names(x)<-par_names
+#'   names(x) <- param_names
 #'
-#'  # log prior
-#'  out=out+sum(dnorm(x["mu_1"],0,sd=1,log=TRUE))
-#'  out=out+sum(dnorm(x["mu_2"],0,sd=1,log=TRUE))
+#'   # log prior
+#'   out <- out + sum(dnorm(x["mu_1"], 0, sd = 1, log = TRUE))
+#'   out <- out + sum(dnorm(x["mu_2"], 0, sd = 1, log = TRUE))
 #'
-#'  # log likelihoods
-#'  out=out+sum(dnorm(data[,1],x["mu_1"],sd=1,log=TRUE))
-#'  out=out+sum(dnorm(data[,2],x["mu_2"],sd=1,log=TRUE))
+#'   # log likelihoods
+#'   out <- out + sum(dnorm(data[, 1], x["mu_1"], sd = 1, log = TRUE))
+#'   out <- out + sum(dnorm(data[, 2], x["mu_2"], sd = 1, log = TRUE))
 #'
-#'  return(out)
-#'}
+#'   return(out)
+#' }
 #'
-#'# Sample from posterior
-#'DEMCMC(LogPostLike=LogPostLikeExample,
-#'       control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
-#'                                   n_iter=1000,
-#'                                   n_chains=12),
-#'                                   data=dataExample,
-#'                                   par_names = par_names_example)
-DEMCMC=function(LogPostLike,control_pars=AlgoParsDEMCMC(),...){
+#' # Sample from posterior
+#' DEMCMC(
+#'   LogPostLike = LogPostLikeExample,
+#'   control_params = AlgoParamsDEMCMC(
+#'     n_params = length(param_names_example),
+#'     n_iter = 1000,
+#'     n_chains = 12
+#'   ),
+#'   data = dataExample,
+#'   param_names = param_names_example
+#' )
+DEMCMC <- function(LogPostLike, control_params = AlgoParamsDEMCMC(), ...) {
 
   # import values we will reuse throughout process
   # create memory structures for storing posterior samples
-  theta=array(NA,dim=c(control_pars$n_samples_per_chain,control_pars$n_chains,control_pars$n_pars))
-  log_post_like=matrix(-Inf,nrow=control_pars$n_samples_per_chain,ncol=control_pars$n_chains)
+  theta <- array(NA, dim = c(control_params$n_samples_per_chain, control_params$n_chains, control_params$n_params))
+  log_post_like <- matrix(-Inf, nrow = control_params$n_samples_per_chain, ncol = control_params$n_chains)
 
 
   # chain initialization
-  print('initalizing chains...')
-  for(chain_idx in 1:control_pars$n_chains){
-    count=0
-    while (log_post_like[1,chain_idx]  == -Inf) {
-      theta[1,chain_idx,] <- stats::rnorm(control_pars$n_pars,control_pars$init_center,control_pars$init_sd)
+  message("initalizing chains...")
+  for (chain_idx in 1:control_params$n_chains) {
+    count <- 0
+    while (log_post_like[1, chain_idx] == -Inf) {
+      theta[1, chain_idx, ] <- stats::rnorm(control_params$n_params, control_params$init_center, control_params$init_sd)
 
-      log_post_like[1,chain_idx] <- LogPostLike(theta[1,chain_idx,],...)
-      count=count+1
-      if(count>100){
-        stop('chain initialization failed.
+      log_post_like[1, chain_idx] <- LogPostLike(theta[1, chain_idx, ], ...)
+      count <- count + 1
+      if (count > 100) {
+        stop("chain initialization failed.
         inspect likelihood and prior or change init_center/init_sd to sample more
-             likely parameter values')
+             likely parameter values")
       }
     }
-    print(paste0(chain_idx," / ",control_pars$n_chains))
+    message(paste0(chain_idx, " / ", control_params$n_chains))
   }
-  print('chain initialization complete  :)')
+  message("chain initialization complete  :)")
 
   # cluster initialization
-  if(!control_pars$parallel_type=='none'){
+  if (!control_params$parallel_type == "none") {
+    message(paste0(
+      "initalizing ",
+      control_params$parallel_type, " cluser with ",
+      control_params$n_cores_use, " cores"
+    ))
 
-    print(paste0("initalizing ",
-                 control_pars$parallel_type," cluser with ",
-                 control_pars$n_cores_use," cores"))
-
-    doParallel::registerDoParallel(control_pars$n_cores_use)
-    cl_use <- parallel::makeCluster(control_pars$n_cores_use,
-                                    type=control_pars$parallel_type)
+    doParallel::registerDoParallel(control_params$n_cores_use)
+    cl_use <- parallel::makeCluster(control_params$n_cores_use,
+      type = control_params$parallel_type
+    )
   }
 
-  print("running DEMCMC")
-  thetaIdx=1
-  for(iter in 1:control_pars$n_iter){
-
-    if(control_pars$parallel_type=='none'){
+  message("running DEMCMC")
+  thetaIdx <- 1
+  for (iter in 1:control_params$n_iter) {
+    if (control_params$parallel_type == "none") {
       # cross over step
-      temp=matrix(unlist(lapply(1:control_pars$n_chains,CrossoverMC,
-                                par_indices=1:control_pars$n_pars,
-                                current_theta=theta[thetaIdx,,],  # current parameter values for chain (numeric vector)
-                                current_log_post_like=log_post_like[thetaIdx,], # corresponding log like for (numeric vector)
-                                LogPostLike=LogPostLike, # log likelihood function (returns scalar)
-                                step_size=control_pars$step_size,
-                                jitter_size=control_pars$jitter_size,
-                                n_chains=control_pars$n_chains,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
+      temp <- matrix(unlist(lapply(1:control_params$n_chains, CrossoverMC,
+        param_indices = 1:control_params$n_params,
+        current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+        current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+        LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+        step_size = control_params$step_size,
+        jitter_size = control_params$jitter_size,
+        n_chains = control_params$n_chains, ...
+      )), control_params$n_chains, control_params$n_params + 1, byrow = T)
     } else {
-      temp=matrix(unlist(parallel::parLapply(cl_use,1:control_pars$n_chains,CrossoverMC,
-                                             par_indices=1:control_pars$n_pars,
-                                             current_theta=theta[thetaIdx,,],  # current parameter values for chain (numeric vector)
-                                             current_log_post_like=log_post_like[thetaIdx,], # corresponding log like for (numeric vector)
-                                             LogPostLike=LogPostLike, # log likelihood function (returns scalar)
-                                             step_size=control_pars$step_size,
-                                             jitter_size=control_pars$jitter_size,
-                                             n_chains=control_pars$n_chains,...)),control_pars$n_chains,control_pars$n_pars+1,byrow=T)
-
+      temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, CrossoverMC,
+        param_indices = 1:control_params$n_params,
+        current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+        current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+        LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+        step_size = control_params$step_size,
+        jitter_size = control_params$jitter_size,
+        n_chains = control_params$n_chains, ...
+      )), control_params$n_chains, control_params$n_params + 1, byrow = T)
     }
-    log_post_like[thetaIdx,]=temp[,1]
-    theta[thetaIdx,,]=temp[,2:(control_pars$n_pars+1)]
-    if(iter<control_pars$n_iter){
-      log_post_like[thetaIdx+1,]=temp[,1]
-      theta[thetaIdx+1,,]=temp[,2:(control_pars$n_pars+1)]
+    log_post_like[thetaIdx, ] <- temp[, 1]
+    theta[thetaIdx, , ] <- temp[, 2:(control_params$n_params + 1)]
+    if (iter < control_params$n_iter) {
+      log_post_like[thetaIdx + 1, ] <- temp[, 1]
+      theta[thetaIdx + 1, , ] <- temp[, 2:(control_params$n_params + 1)]
     }
-    #   # purification step
-    #   if(iter%%purify.rate==0){
-    #     temp=unlist(lapply(1:n_chains,PurifyMC,
-    #                                 current_theta=theta[iter,],  # current parameter values for chain (numeric vector)
-    #                                 current_log_post_like=log_post_like[iter,], # corresponding log like for (numeric vector)
-    #                                 LogPostLike=LogPostLike)) # log likelihood function (returns scalar),n.chains,n.pars+1,byrow=T)
-    #     log_post_like[iter,]=temp
-    #   }
-
-    if(iter%%100==0)print(paste0('iter ',iter,'/',control_pars$n_iter))
-    if(iter>control_pars$burnin & iter%%control_pars$thin==0){
-      thetaIdx=thetaIdx+1
+    ########
+    # PURIFICATION
+    ########
+    if (iter %% control_params$purify == 0) {
+      if (control_params$parallel_type == "none") {
+        # cross over step
+        temp <- matrix(unlist(lapply(1:control_params$n_chains, PurifyMC,
+          param_indices = 1:control_params$n_params,
+          current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+          current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+          LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+          n_chains = control_params$n_chains, ...
+        )), control_params$n_chains, control_params$n_params + 1, byrow = T)
+      } else {
+        temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, PurifyMC,
+          param_indices = 1:control_params$n_params,
+          current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+          current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+          LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+          n_chains = control_params$n_chains, ...
+        )),
+        control_params$n_chains, control_params$n_params + 1,
+        byrow = T
+        )
+      }
+      log_post_like[thetaIdx, ] <- temp[, 1]
+      theta[thetaIdx, , ] <- temp[, 2:(control_params$n_params + 1)]
+      if (iter < control_params$n_iter) {
+        log_post_like[thetaIdx + 1, ] <- temp[, 1]
+        theta[thetaIdx + 1, , ] <- temp[, 2:(control_params$n_params + 1)]
+      }
     }
-
+    if (iter %% 100 == 0) message(paste0("iter ", iter, "/", control_params$n_iter))
+    if (iter > control_params$burnin & iter %% control_params$thin == 0) {
+      thetaIdx <- thetaIdx + 1
+    }
   }
+
   # cluster stop
-  if(!control_pars$parallel_type=='none'){
-    parallel::stopCluster(cl=cl_use)
+  if (!control_params$parallel_type == "none") {
+    parallel::stopCluster(cl = cl_use)
   }
-  dimnames(theta)[[3]] <- control_pars$par_names
-  return(list('samples'=theta,'log_post_like'=log_post_like,'control_pars'=control_pars))
+
+  dimnames(theta)[[3]] <- control_params$param_names
+  dimnames(theta)[[2]] <- paste0("Chain", 1:control_params$n_chains)
+  dimnames(theta)[[1]] <- paste0("Sample", 1:control_params$n_samples_per_chain)
+
+  return(list("samples" = theta, "log_post_like" = log_post_like))
 }

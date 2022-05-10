@@ -43,13 +43,13 @@ library(DEBBI)
 dataExample=matrix(rnorm(100,c(-1,1),c(1,1)),nrow=50,ncol=2,byrow = T)
 
 # list parameter names
-par_names_example=c("mu_1","mu_2")
+param_names_example=c("mu_1","mu_2")
 
 # log posterior likelihood function = log likelihood + log prior | returns a scalar
-LogPostLikeExample=function(x,data,par_names){
+LogPostLikeExample=function(x,data,param_names){
   out=0
   
-  names(x)<-par_names
+  names(x)<-param_names
   
   # log prior
   out=out+sum(dnorm(x["mu_1"],0,sd=1,log=T))
@@ -64,29 +64,29 @@ LogPostLikeExample=function(x,data,par_names){
 
 # Sample from posterior
 post <- DEMCMC(LogPostLike=LogPostLikeExample,
-                  control_pars=AlgoParsDEMCMC(n_pars=length(par_names_example),
+                  control_params=AlgoParamsDEMCMC(n_params=length(param_names_example),
                                      n_iter=500, 
                                      n_chains=12,
                                      burnin=100),
                   data=dataExample,
-                  par_names = par_names_example)
+                  param_names = param_names_example)
 
 
 par(mfrow=c(2,2))
 
   hist(post$samples[,,1],main="marginal posterior distribution",
-       xlab=par_names_example[1],prob=T)
+       xlab=param_names_example[1],prob=T)
   # plot true parameter value as vertical line
   abline(v=-1,lwd=3)
-  matplot(post$samples[,,1],type='l',ylab=par_names_example[1],
+  matplot(post$samples[,,1],type='l',ylab=param_names_example[1],
           main="chain trace plot",xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=-1,lwd=3)
   
-  hist(post$samples[,,2],xlab=par_names_example[2],prob=T,main="")
+  hist(post$samples[,,2],xlab=param_names_example[2],prob=T,main="")
   # plot true parameter value as vertical line
   abline(v=1,lwd=3)
-  matplot(post$samples[,,2],type='l',ylab=par_names_example[2],xlab="iteration",lwd=2)
+  matplot(post$samples[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=1,lwd=3)
 
@@ -101,25 +101,25 @@ Find posterior mode (a.k.a. maximum a posteriori or MAP) of mean parameters of t
 
 # optimize posterior wrt to theta
 map <- DEMAP(LogPostLike=LogPostLikeExample,
-                  control_pars=AlgoParsDEMAP(n_pars=length(par_names_example),
+                  control_params=AlgoParamsDEMAP(n_params=length(param_names_example),
                                      n_iter=100, 
                                      n_chains=12, return_trace = T),
                   data=dataExample,
-                  par_names = par_names_example)
+                  param_names = param_names_example)
 
 
-  print(paste0('map estimates:',round(map$mapEst,2)))
-  print(paste0('log posterior likelihood:',round(map$log_post_like,2)))
+  message(paste0('map estimates:',round(map$mapEst,2)))
+  message(paste0('log posterior likelihood:',round(map$log_post_like,2)))
   
 par(mfrow=c(2,2))
   
   # plot particle trace plot for mu 1
-  matplot(map$theta_trace[,,1],type='l',ylab=par_names_example[1],xlab="iteration",lwd=2)
+  matplot(map$theta_trace[,,1],type='l',ylab=param_names_example[1],xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=-1,lwd=3)
   
   # plot particle trace plot for mu 2
-  matplot(map$theta_trace[,,2],type='l',ylab=par_names_example[2],xlab="iteration",lwd=2)
+  matplot(map$theta_trace[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
   # plot true parameter value as horizontal line
   abline(h=1,lwd=3)
   
@@ -136,27 +136,27 @@ Optimize parameters lambda of Q(theta|lambda) to minimize the KL Divergence (max
 
 # optimize KL between approximating distribution Q (mean-field approximation) and posterior
 vb <- DEVI(LogPostLike=LogPostLikeExample,
-                  control_pars=AlgoParsDEVI(n_pars=length(par_names_example),
+                  control_params=AlgoParamsDEVI(n_params=length(param_names_example),
                                      n_iter=200,
                                      n_chains=12, return_trace = T),
                   data=dataExample,
-                  par_names = par_names_example)
+                  param_names = param_names_example)
 
 
   # posterior means
-  print((round(vb$means,2)))
+  message((round(vb$means,2)))
 
   # posterior covariance
-  print(round(vb$covariance,3))
+  message(round(vb$covariance,3))
         
 par(mfrow=c(2,2))
 
   # plot particle trace plot for mu 1
-  matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(par_names_example[1]," mean"),xlab="iteration",lwd=2)
-  matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(par_names_example[2]," mean"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(param_names_example[1]," mean"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(param_names_example[2]," mean"),xlab="iteration",lwd=2)
 
-  matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(par_names_example[1]," log sd"),xlab="iteration",lwd=2)
-  matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(par_names_example[2]," log sd"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(param_names_example[1]," log sd"),xlab="iteration",lwd=2)
+  matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(param_names_example[2]," log sd"),xlab="iteration",lwd=2)
 
 par(mfrow=c(1,1))
   matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
