@@ -1,15 +1,23 @@
 Package: DEBBI
 Title: Differential Evolution-Based Bayesian Inference
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
-    person("Brendan Matthew", "Galdo", , "brendan.m.galdo@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Bayesian inference algorithms based on the population-based "differential evolution" (DE) algorithm. Users can obtain posterior mode (MAP) estimates, posterior samples via DEMCMC, and variational approximations via DEVI. 
+    person(given = "Brendan Matthew",
+           family = "Galdo",
+           role = c("aut", "cre"),
+           email = "Brendan.m.galdo@gmail.com",
+           comment = c(ORCID = "0000-0002-1279-3859"))
+Description: Bayesian inference algorithms based on the population-based "differential evolution" (DE) algorithm. Users can obtain posterior mode (MAP) estimates via DEMAP, posterior samples via DEMCMC, and variational approximations via DEVI. 
 License: MIT + file LICENSE
+URL: https://github.com/bmgaldo/DEBBI
+BugReports: https://github.com/bmgaldo/DEBBI
 Encoding: UTF-8
 Imports: 
     stats,
     doParallel,
-    randtoolbox
+    randtoolbox,
+    numDeriv
+Depends:
+    R (>= 3.5.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
