@@ -1,15 +1,15 @@
 #' DEMAP
-#' @description DE optimization for Maximum a posteriori estimation; his function tries to find the posterior mode.
-#' @param LogPostLike function whose first arguement is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.
-#' @param control_params control parameters for DE algo. see \code{\link{AlgoParamsDEMAP}} function documentation for more details.
+#' @description DE optimization for maximum a posteriori (MAP) estimation; his function tries to find the posterior mode.
+#' @param LogPostLike function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.
+#' @param control_params control parameters for DE algorithm. see \code{\link{AlgoParamsDEMAP}} function documentation for more details.
 #' @param ... additional arguments to pass LogPostLike
-#' @return list contain posterior samples from DEMCMC in a n_iters_per_chain $x$ n_chains $x$ n_params array and the log likelihood of each sample in a n_iters_per_chain x n_chains array.
+#' @return list contain posterior samples from DEMCMC in a n_iters_per_chain by n_chains by n_params array and the log likelihood of each sample in a n_iters_per_chain by n_chains array.
 #' @export
 #' @md
 #' @examples
 #' # simulate from model
 #' dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(1, 1)), nrow = 50, ncol = 2, byrow = TRUE)
-#' #
+#'
 #' # list parameter names
 #' param_names_example <- c("mu_1", "mu_2")
 #'
@@ -96,7 +96,7 @@ DEMAP <- function(LogPostLike, control_params = AlgoParamsDEMAP(), ...) {
         jitter_size = control_params$jitter_size,
         n_chains = control_params$n_chains,
         crossover_rate = control_params$crossover_rate, ...
-      )), control_params$n_chains, control_params$n_params + 1, byrow = T)
+      )), control_params$n_chains, control_params$n_params + 1, byrow = TRUE)
     } else {
       temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, CrossoverOptimize,
         current_params = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
@@ -106,7 +106,7 @@ DEMAP <- function(LogPostLike, control_params = AlgoParamsDEMAP(), ...) {
         jitter_size = control_params$jitter_size,
         n_chains = control_params$n_chains,
         crossover_rate = control_params$crossover_rate, ...
-      )), control_params$n_chains, control_params$n_params + 1, byrow = T)
+      )), control_params$n_chains, control_params$n_params + 1, byrow = TRUE)
     }
     log_post_like[thetaIdx, ] <- temp[, 1]
     theta[thetaIdx, , ] <- temp[, 2:(control_params$n_params + 1)]
@@ -124,19 +124,19 @@ DEMAP <- function(LogPostLike, control_params = AlgoParamsDEMAP(), ...) {
     parallel::stopCluster(cl = cl_use)
   }
   mapIdx <- which.max(log_post_like[control_params$n_iters_per_chain, ])
-  mapEst <- theta[control_params$n_iters_per_chain, mapIdx, ]
-  names(mapEst) <- control_params$param_names
+  map_est <- theta[control_params$n_iters_per_chain, mapIdx, ]
+  names(map_est) <- control_params$param_names
 
-  if (control_params$return_trace == T) {
+  if (control_params$return_trace == TRUE) {
     return(list(
-      "mapEst" = mapEst,
+      "map_est" = map_est,
       "log_post_like" = log_post_like[control_params$n_iters_per_chain, mapIdx],
       "theta_trace" = theta,
       "log_post_like_trace" = log_post_like
     ))
   } else {
     return(list(
-      "mapEst" = mapEst,
+      "map_est" = map_est,
       "log_post_like" = log_post_like[control_params$n_iters_per_chain, mapIdx]
     ))
   }

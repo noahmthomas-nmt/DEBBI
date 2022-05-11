@@ -60,12 +60,12 @@ LogPostLikeExample=function(x,data,param_names){
 
 # Sample from posterior
 post <- DEMCMC(LogPostLike=LogPostLikeExample,
-                  control_params=AlgoParamsDEMCMC(n_params=length(param_names_example),
-                                     n_iter=500, 
-                                     n_chains=12,
-                                     burnin=100),
-                  data=dataExample,
-                  param_names = param_names_example)
+               control_params=AlgoParamsDEMCMC(n_params=length(param_names_example),
+                                               n_iter=500, 
+                                               n_chains=12,
+                                               burnin=100),
+               data=dataExample,
+               param_names = param_names_example)
 #> initalizing chains...
 #> 1 / 12
 #> 2 / 12
@@ -87,27 +87,62 @@ post <- DEMCMC(LogPostLike=LogPostLikeExample,
 #> iter 400/500
 #> iter 500/500
 
-
 par(mfrow=c(2,2))
 
-  hist(post$samples[,,1],main="marginal posterior distribution",
-       xlab=param_names_example[1],prob=T)
-  # plot true parameter value as vertical line
-  abline(v=-1,lwd=3)
-  matplot(post$samples[,,1],type='l',ylab=param_names_example[1],
-          main="chain trace plot",xlab="iteration",lwd=2)
-  # plot true parameter value as horizontal line
-  abline(h=-1,lwd=3)
-  
-  hist(post$samples[,,2],xlab=param_names_example[2],prob=T,main="")
-  # plot true parameter value as vertical line
-  abline(v=1,lwd=3)
-  matplot(post$samples[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
-  # plot true parameter value as horizontal line
-  abline(h=1,lwd=3)
+hist(post$samples[,,1],main="marginal posterior distribution",
+     xlab=param_names_example[1],prob=T)
+# plot true parameter value as vertical line
+abline(v=-1,lwd=3)
+matplot(post$samples[,,1],type='l',ylab=param_names_example[1],
+        main="chain trace plot",xlab="iteration",lwd=2)
+# plot true parameter value as horizontal line
+abline(h=-1,lwd=3)
+
+hist(post$samples[,,2],xlab=param_names_example[2],prob=T,main="")
+# plot true parameter value as vertical line
+abline(v=1,lwd=3)
+matplot(post$samples[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
+# plot true parameter value as horizontal line
+abline(h=1,lwd=3)
 ```
 
-<img src="man/figures/README-DEMCMC example-1.png" width="100%" />
+<img src="man/figures/README-DEMCMC_example-1.png" width="100%" />
+
+``` r
+# let's check if the approximation is of good quality
+#### mu_1
+#### DEMCMC solution
+# posterior mean
+round(mean(post$samples[,,1]),3)
+#> [1] -1.092
+# posterior sd
+round(var(as.numeric(post$samples[,,1])),3)
+#> [1] 0.02
+
+#### Analytic solution (conjugate posteriors)
+# posterior mean
+round(1/(1+50/1)*(sum(dataExample[,1])),3)
+#> [1] -1.101
+# posterior sd
+round(1/(1+50/1),3)
+#> [1] 0.02
+
+#### mu_2
+# posterior mean  (conjugate posteriors)
+round(mean(post$samples[,,2]),3)
+#> [1] 0.871
+# posterior sd
+round(var(as.numeric(post$samples[,,2])),3)
+#> [1] 0.019
+
+#### Analytic solution
+# posterior mean
+round(1/(1+50/1)*(sum(dataExample[,2])),3)
+#> [1] 0.876
+# posterior sd
+round(1/(1+50/1),3)
+#> [1] 0.02
+```
 
 ## DEMAP Example
 
@@ -118,11 +153,11 @@ deviations using DE
 ``` r
 # optimize posterior wrt to theta
 map <- DEMAP(LogPostLike=LogPostLikeExample,
-                  control_params=AlgoParamsDEMAP(n_params=length(param_names_example),
-                                     n_iter=100, 
-                                     n_chains=12, return_trace = T),
-                  data=dataExample,
-                  param_names = param_names_example)
+             control_params=AlgoParamsDEMAP(n_params=length(param_names_example),
+                                            n_iter=100, 
+                                            n_chains=12, return_trace = T),
+             data=dataExample,
+             param_names = param_names_example)
 #> initalizing chains...
 #> 1 / 12
 #> 2 / 12
@@ -141,28 +176,48 @@ map <- DEMAP(LogPostLike=LogPostLikeExample,
 #> iter 100/100
 
 
-  message(paste0('map estimates:',round(map$mapEst,2)))
-#> map estimates:-1.1map estimates:0.88
-  message(paste0('log posterior likelihood:',round(map$log_post_like,2)))
-#> log posterior likelihood:-143.05
-  
+
 par(mfrow=c(2,2))
-  
-  # plot particle trace plot for mu 1
-  matplot(map$theta_trace[,,1],type='l',ylab=param_names_example[1],xlab="iteration",lwd=2)
-  # plot true parameter value as horizontal line
-  abline(h=-1,lwd=3)
-  
-  # plot particle trace plot for mu 2
-  matplot(map$theta_trace[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
-  # plot true parameter value as horizontal line
-  abline(h=1,lwd=3)
-  
-  matplot(map$log_post_like_trace,type='l',ylab='log posterior likelihood',xlab="iteration",lwd=2)
-  abline(h=-1,lwd=3)
+
+# plot particle trace plot for mu 1
+matplot(map$theta_trace[,,1],type='l',ylab=param_names_example[1],xlab="iteration",lwd=2)
+# plot true parameter value as horizontal line
+abline(h=-1,lwd=3)
+
+# plot particle trace plot for mu 2
+matplot(map$theta_trace[,,2],type='l',ylab=param_names_example[2],xlab="iteration",lwd=2)
+# plot true parameter value as horizontal line
+abline(h=1,lwd=3)
+
+matplot(map$log_post_like_trace,type='l',ylab='log posterior likelihood',xlab="iteration",lwd=2)
+abline(h=-1,lwd=3)
+
+
+# let's check if the approximation is of good quality
+#### mu_1
+#### DEMAPsolution
+# posterior mode
+round(map$map_est[1],3)
+#> [1] -1.101
+
+#### Analytic solution (conjugate posteriors)
+# posterior mode
+round(1/(1+50/1)*(sum(dataExample[,1])),3)
+#> [1] -1.101
+
+#### mu_2
+#### DEMAP solution
+# posterior mode
+round(map$map_est[2],3)
+#> [1] 0.876
+
+#### Analytic solution (conjugate posteriors)
+# posterior mode
+round(1/(1+50/1)*(sum(dataExample[,2])),3)
+#> [1] 0.876
 ```
 
-<img src="man/figures/README-DEMAP example-1.png" width="100%" />
+<img src="man/figures/README-DEMAP_example-1.png" width="100%" />
 
 ## DEVI Example
 
@@ -172,13 +227,16 @@ Divergence (maximize the ELBO) between Q and the likelihood\*prior
 ``` r
 # optimize KL between approximating distribution Q (mean-field approximation) and posterior
 vb <- DEVI(LogPostLike=LogPostLikeExample,
-                  control_params=AlgoParamsDEVI(n_params=length(param_names_example),
-                                     n_iter=200,
-                                     n_samples_ELBO = 20,
-                                     n_chains=12,use_QMC = T,
-                                     return_trace = T),
-                  data=dataExample,
-                  param_names = param_names_example)
+           control_params=AlgoParamsDEVI(n_params=length(param_names_example),
+                                         n_iter=200,
+                                         n_samples_ELBO = 5,
+                                         n_chains=12,
+                                         use_QMC = F,
+                                         n_samples_LRVB = 25,
+                                         purify=10,
+                                         return_trace = T),
+           data=dataExample,
+           param_names = param_names_example)
 #> initalizing chains...
 #> 1 / 12
 #> 2 / 12
@@ -200,31 +258,48 @@ vb <- DEVI(LogPostLike=LogPostLikeExample,
 #> LRVB correction was a success!
 
 
-  # posterior means
-  message(paste(round(vb$means,2)))
-#> -1.050.88
-
-  # posterior covariance
-  message(paste(round(vb$covariance,3)))
-#> 0.02000.02
-        
 par(mfrow=c(2,2))
 
-  # plot particle trace plot for mu 1
-  matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(param_names_example[1]," mean"),xlab="iteration",lwd=2)
-  matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(param_names_example[2]," mean"),xlab="iteration",lwd=2)
+# plot particle trace plot for mu 1
+matplot(vb$lambda_trace[,,1],type='l',ylab=paste0(param_names_example[1]," mean"),xlab="iteration",lwd=2)
+matplot(vb$lambda_trace[,,2],type='l',ylab=paste0(param_names_example[2]," mean"),xlab="iteration",lwd=2)
 
-  matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(param_names_example[1]," log sd"),xlab="iteration",lwd=2)
-  matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(param_names_example[2]," log sd"),xlab="iteration",lwd=2)
+matplot(vb$lambda_trace[,,3],type='l',ylab=paste0(param_names_example[1]," log sd"),xlab="iteration",lwd=2)
+matplot(vb$lambda_trace[,,4],type='l',ylab=paste0(param_names_example[2]," log sd"),xlab="iteration",lwd=2)
 ```
 
-<img src="man/figures/README-DEVIexample-1.png" width="100%" />
+<img src="man/figures/README-DEVI_example-1.png" width="100%" />
 
 ``` r
 par(mfrow=c(1,1))
-  matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
+matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
 ```
 
-<img src="man/figures/README-DEVIexample-2.png" width="100%" />
+<img src="man/figures/README-DEVI_example-2.png" width="100%" />
 
-s
+``` r
+
+
+# let's check if the approximation is of good quality
+#### DEVI solution
+# posterior mean
+round(vb$means,3)
+#> param_1_mean param_2_mean 
+#>       -1.045        1.243
+# posterior covariance
+round((vb$covariance),3)
+#>      [,1] [,2]
+#> [1,] 0.02 0.00
+#> [2,] 0.00 0.02
+
+#### Analytic solution (conjugate posteriors)
+# posterior mean
+round(c(1/(1+50/1)*(sum(dataExample[,1])),1/(1+50/1)*(sum(dataExample[,2]))),3)
+#> [1] -1.101  0.876
+# posterior covariance
+diag(c(round(1/(1+50/1),3),
+       round(1/(1+50/1),3)))
+#>      [,1] [,2]
+#> [1,] 0.02 0.00
+#> [2,] 0.00 0.02
+```

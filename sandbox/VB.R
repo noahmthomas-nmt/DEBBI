@@ -119,7 +119,7 @@ QSample <- function(use_lambda, control_params, S) {
 
 
 KLHat <- function(lambda, LogPostLike, control_params, S, ...) {
-  # monte carlo approximation KL divergence up to a constant
+  # Monte Carlo approximation KL divergence up to a constant
 
   out <- 0 # initalize output vector
 
@@ -138,7 +138,7 @@ KLHat <- function(lambda, LogPostLike, control_params, S, ...) {
 
 
 ELBO <- function(lambda, LogPostLike, control_params, S, ...) {
-  # monte carlo approximation ELBO
+  # Monte Carlo approximation ELBO
   out <- KLHat(lambda, LogPostLike, control_params, S, ...) * -1
   return(out)
 }

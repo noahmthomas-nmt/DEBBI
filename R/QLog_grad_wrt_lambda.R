@@ -1,8 +1,8 @@
-#' QLog_grad_log_sigma
+#' QLog_grad_wrt_lambda
 #' @description computes gradient log density of the mean field Q(theta|lambda), uses log sigma (unconstrained) parameterization
 #' @param use_theta samples of theta from approximating distribution Q
 #' @param use_lambda  parameters governing approximating distribution Q
-#' @param S number of samples for monte carlo approximation
+#' @param S number of samples for Monte Carlo approximation
 #' @param control_params list of algo control parameters
 #' @noRd
 

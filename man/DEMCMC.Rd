@@ -7,17 +7,17 @@
 DEMCMC(LogPostLike, control_params = AlgoParamsDEMCMC(), ...)
 }
 \arguments{
-\item{LogPostLike}{function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the paramemter vector.}
+\item{LogPostLike}{function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
 
-\item{control_params}{control parameters for DEMCMC algo. see \code{\link{AlgoParamsDEMCMC}} function documentation for more details.}
+\item{control_params}{control parameters for DEMCMC algorithm. see \code{\link{AlgoParamsDEMCMC}} function documentation for more details. You must specify 'n_params' here.}
 
 \item{...}{additional arguments to pass LogPostLike}
 }
 \value{
-list contain posterior samples from DEMCMC in a n_samples_per_chain by n_chains by n_params array and the log likelihood of each sample in a n_samples_per_chain by n_chains array.
+list contain posterior samples from DEMCMC in a 'n_samples_per_chain' by 'n_chains' by n_params array and the log posterior likelihood of each sample in a 'n_samples_per_chain' by 'n_chains' array.
 }
 \description{
-Sample from Posterior using Differential Evolution Markov Chain Monte Carlo
+Sample from posterior using Differential Evolution Markov Chain Monte Carlo
 }
 \examples{
 # simulate from model

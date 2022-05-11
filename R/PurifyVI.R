@@ -6,7 +6,7 @@
 #' @param LogPostLike  log posterior density function (log likelihood + log prior)
 #' @param n_chains number of chains
 #' @param control_params list of algorithm control parameters
-#' @param S number of samples for ELBO monte carlo estimate
+#' @param S number of samples for ELBO Monte Carlo estimate
 #' @param ... additional arguments for LogPostLike function
 #' @noRd
 PurifyVI <- function(chain_index,

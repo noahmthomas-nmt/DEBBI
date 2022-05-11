@@ -28,7 +28,7 @@ AlgoParamsDEMAP(
 
 \item{init_sd}{positive scalar or n_params-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution}
 
-\item{init_center}{scalar or n_params-dimensional numeric vector, determines the mean of the Gaussian initialization distribution}
+\item{init_center}{scalar or n_params-dimensional numeric vector that determines the mean of the Gaussian initialization distribution}
 
 \item{n_cores_use}{number of cores used when using parallelization.}
 
@@ -40,7 +40,7 @@ AlgoParamsDEMAP(
 
 \item{parallel_type}{string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.}
 
-\item{return_trace}{boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
+\item{return_trace}{logical, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
 
 \item{thin}{positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.}
 }

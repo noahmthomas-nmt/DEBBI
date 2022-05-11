@@ -15,7 +15,7 @@ AlgoParamsDEVI(
   step_size = NULL,
   jitter_size = 1e-06,
   parallel_type = "none",
-  use_QMC = T,
+  use_QMC = TRUE,
   purify = NULL,
   quasi_rand_seq = "halton",
   n_samples_ELBO = 10,
@@ -49,15 +49,15 @@ AlgoParamsDEVI(
 
 \item{parallel_type}{string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.}
 
-\item{use_QMC}{boolean, if true, a quasi-monte carlo estimator is used to estimate ELBO during optimization. default is TRUE.}
+\item{use_QMC}{logical, if true, a quasi-Monte Carlo estimator is used to estimate ELBO during optimization. default is TRUE.}
 
-\item{purify}{an integer, every 'purif'-th interation, the monte carlo estimator of the ELBO is recalculated. This can help deal with noisy and outlier estimates of the ELBO. Default value is 25. If use_QMC is TRUE, purification is disabled as it is redundant.}
+\item{purify}{an integer, every 'purify'-th iteration, the Monte Carlo estimator of the ELBO is recalculated. This can help deal with noisy and outlier estimates of the ELBO. Default value is 25. If use_QMC is TRUE, purification is disabled as it is redundant.}
 
-\item{quasi_rand_seq}{type of low discrepancy sequence used for quasi monte carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.}
+\item{quasi_rand_seq}{type of low discrepancy sequence used for quasi Monte Carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.}
 
-\item{n_samples_ELBO}{number of samples used for the monte carlo estimator ot the ELBO (the objective function). default is 10.}
+\item{n_samples_ELBO}{number of samples used for the Monte Carlo estimator of the ELBO (the objective function). default is 10.}
 
-\item{LRVB_correction}{boolean, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.}
+\item{LRVB_correction}{logical, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.}
 
 \item{n_samples_LRVB}{number of samples used for LRVB correction. default is 25.}
 
@@ -67,7 +67,7 @@ AlgoParamsDEVI(
 
 \item{burnin}{number of initial iterations to discard. Default value is 0.}
 
-\item{return_trace}{boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
+\item{return_trace}{logical, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
 
 \item{crossover_rate}{number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.}
 }

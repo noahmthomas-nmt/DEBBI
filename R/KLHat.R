@@ -1,5 +1,5 @@
 #' KLHat
-#' @description returns a monte carlo or quasi-monte carlo estimate of KL divergence up to a constant (negative ELBO).
+#' @description returns a Monte Carlo or quasi-Monte Carlo estimate of KL divergence up to a constant (negative ELBO).
 #' @param lambda samples of theta from approximating distribution Q
 #' @param LogPostLike  log posterior likelihood function
 #' @param S number of samples to use for the approximation
@@ -7,7 +7,7 @@
 #' @param ... additional parameters for LogPostLike
 #' @noRd
 KLHat <- function(lambda, LogPostLike, control_params, S, ...) {
-  # Monte carlo approximation KL divergence up to a constant
+  # Monte Carlo approximation KL divergence up to a constant
 
   out <- 0 # initialize output vector
 

@@ -11,15 +11,15 @@
 #' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_params).
 #' @param jitter_size positive scalar, noise is added during crossover step from Uniform(-jitter_size,jitter_size) distribution. 1e-6 is the default value.
 #' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
-#' @param return_trace boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
+#' @param return_trace logical, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running algorithm for longer.
 #' @param burnin number of initial iterations to discard. Default value is 0.
-#' @param purify an integer, every 'purif'-th interation, the monte carlo estimator of the ELBO is recalculated. This can help deal with noisy and outlier estimates of the ELBO. Default value is 25. If use_QMC is TRUE, purification is disabled as it is redundant.
-#' @param n_samples_ELBO number of samples used for the monte carlo estimator ot the ELBO (the objective function). default is 10.
-#' @param use_QMC boolean, if true, a quasi-monte carlo estimator is used to estimate ELBO during optimization. default is TRUE.
-#' @param LRVB_correction boolean, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.
+#' @param purify an integer, every 'purify'-th iteration, the Monte Carlo estimator of the ELBO is recalculated. This can help deal with noisy and outlier estimates of the ELBO. Default value is 25. If use_QMC is TRUE, purification is disabled as it is redundant.
+#' @param n_samples_ELBO number of samples used for the Monte Carlo estimator of the ELBO (the objective function). default is 10.
+#' @param use_QMC logical, if true, a quasi-Monte Carlo estimator is used to estimate ELBO during optimization. default is TRUE.
+#' @param LRVB_correction logical, if true, LRVB covariance correction (Giordano, Brodderick, & Jordan 2018; Galdo, Bahg, & Turner 2020) is attempted.
 #' @param n_samples_LRVB number of samples used for LRVB correction. default is 25.
-#' @param quasi_rand_seq type of low discrepancy sequence used for quasi monte carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.
+#' @param quasi_rand_seq type of low discrepancy sequence used for quasi Monte Carlo integration, either 'sobol' or 'halton'. LRVB correction always use QMC. Default is 'sobol'.
 #' @param neg_inf if density for a given value of theta is numerically 0 for q, this value is assigned for log density. This helps with numeric stability of algorithm. Default value is -750.
 #' @return list of control parameters for the DEVI function
 #' @export
@@ -35,7 +35,7 @@ AlgoParamsDEVI <- function(n_params,
                            step_size = NULL,
                            jitter_size = 1e-6,
                            parallel_type = "none",
-                           use_QMC = T,
+                           use_QMC = TRUE,
                            purify = NULL,
                            quasi_rand_seq = "halton",
                            n_samples_ELBO = 10,
@@ -309,7 +309,7 @@ AlgoParamsDEVI <- function(n_params,
   }
   ### catch errors
   if (any(!is.finite(purify))) {
-    stop("ERROR:purify is not finite")
+    stop("ERROR: purify is not finite")
   } else if (purify < 1 | length(purify) > 1) {
     stop("ERROR: purify must be a postitive integer scalar")
   }

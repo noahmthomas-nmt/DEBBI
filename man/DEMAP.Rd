@@ -7,22 +7,22 @@
 DEMAP(LogPostLike, control_params = AlgoParamsDEMAP(), ...)
 }
 \arguments{
-\item{LogPostLike}{function whose first arguement is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
+\item{LogPostLike}{function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
 
-\item{control_params}{control parameters for DE algo. see \code{\link{AlgoParamsDEMAP}} function documentation for more details.}
+\item{control_params}{control parameters for DE algorithm. see \code{\link{AlgoParamsDEMAP}} function documentation for more details.}
 
 \item{...}{additional arguments to pass LogPostLike}
 }
 \value{
-list contain posterior samples from DEMCMC in a n_iters_per_chain $x$ n_chains $x$ n_params array and the log likelihood of each sample in a n_iters_per_chain x n_chains array.
+list contain posterior samples from DEMCMC in a n_iters_per_chain by n_chains by n_params array and the log likelihood of each sample in a n_iters_per_chain by n_chains array.
 }
 \description{
-DE optimization for Maximum a posteriori estimation; his function tries to find the posterior mode.
+DE optimization for maximum a posteriori (MAP) estimation; his function tries to find the posterior mode.
 }
 \examples{
 # simulate from model
 dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(1, 1)), nrow = 50, ncol = 2, byrow = TRUE)
-#
+
 # list parameter names
 param_names_example <- c("mu_1", "mu_2")
 

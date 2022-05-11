@@ -5,12 +5,12 @@
 #' @param n_iter number of iterations to run the sampling algorithm, 1000 is default
 #' @param crossover_rate number on the interval (0,1]. Determines the probability a parameter on a chain is updated on a given crossover step, sampled from a Bernoulli distribution.
 #' @param init_sd positive scalar or n_params-dimensional numeric vector, determines the standard deviation of the Gaussian initialization distribution
-#' @param init_center scalar or n_params-dimensional numeric vector, determines the mean of the Gaussian initialization distribution
+#' @param init_center scalar or n_params-dimensional numeric vector that determines the mean of the Gaussian initialization distribution
 #' @param n_cores_use number of cores used when using parallelization.
 #' @param step_size positive scalar, jump size in DE crossover step, default is 2.38/sqrt(2*n_params).
 #' @param jitter_size positive scalar, noise is added during crossover step from Uniform(-jitter_size,jitter_size) distribution. 1e-6 is the default value.
 #' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
-#' @param return_trace boolean, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
+#' @param return_trace logical, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.
 #' @return list of control parameters for the DEMAP function
 #' @export

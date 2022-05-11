@@ -1,14 +1,14 @@
 #' DEVI
 #' @description DE optimization for mean-field variational inference. Minimizes the KL divergence (maximizes the ELBO) between $q(theta|lambda)$ and the target posterior $p(theta|data)$ For a tutorial on variational inference check out Galdo, Bahg, & Turner 2020.
 #' @param LogPostLike function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.
-#' @param control_params control parameters for DE algo. see \code{\link{AlgoParamsDEVI}} function documentation for more details.
+#' @param control_params control parameters for DE algorithm. see \code{\link{AlgoParamsDEVI}} function documentation for more details.
 #' @param ... additional arguments to pass LogPostLike
-#' @return list contain mean in a n_iters_per_chain $x$ n_chains $x$ 2*n_params_model array and the ELBO of each sample in a n_iters_per_chain x n_chains array.
+#' @return list contain mean in a n_iters_per_chain by n_chains by 2*n_params_model array and the ELBO of each sample in a n_iters_per_chain by n_chains array.
 #' @export
 #' @md
 #' @examples
 #' # simulate from model
-#' dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(.1, .1)), nrow = 50, ncol = 2, byrow = TRUE)
+#' dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(1, 1)), nrow = 50, ncol = 2, byrow = TRUE)
 #' ## list parameter names
 #' param_names_example <- c("mu_1", "mu_2")
 #'
@@ -113,7 +113,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
         S = control_params$n_samples_ELBO, ...
       )),
       nrow = control_params$n_chains,
-      ncol = control_params$n_params_dist + 1, byrow = T
+      ncol = control_params$n_params_dist + 1, byrow = TRUE
       )
     } else {
       temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, CrossoverVI,
@@ -129,7 +129,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
       )),
       control_params$n_chains,
       control_params$n_params_dist + 1,
-      byrow = T
+      byrow = TRUE
       )
     }
     # update particle chains
@@ -154,7 +154,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
           S = control_params$n_samples_ELBO, ...
         )),
         nrow = control_params$n_chains,
-        ncol = control_params$n_params_dist + 1, byrow = T
+        ncol = control_params$n_params_dist + 1, byrow = TRUE
         )
       } else {
         temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, PurifyVI,
@@ -201,7 +201,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
     maxIdx, (control_params$n_params_model + 1):control_params$n_params_dist
   ]))
 
-  if (control_params$LRVB_correction == T) {
+  if (control_params$LRVB_correction == TRUE) {
     message("Attemtping LRVB covariance correction.")
     control_params_LRVB <- control_params
     control_params_LRVB$use_QMC <- TRUE
@@ -220,7 +220,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
     }
   }
 
-  if (control_params$return_trace == T) {
+  if (control_params$return_trace == TRUE) {
     return(list(
       "means" = means,
       "covariance" = covariance,

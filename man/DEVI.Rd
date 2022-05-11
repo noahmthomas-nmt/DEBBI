@@ -7,21 +7,21 @@
 DEVI(LogPostLike, control_params = AlgoParamsDEVI(), ...)
 }
 \arguments{
-\item{LogPostLike}{function whose first arguement is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
+\item{LogPostLike}{function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.}
 
-\item{control_params}{control parameters for DE algo. see \code{\link{AlgoParamsDEVI}} function documentation for more details.}
+\item{control_params}{control parameters for DE algorithm. see \code{\link{AlgoParamsDEVI}} function documentation for more details.}
 
 \item{...}{additional arguments to pass LogPostLike}
 }
 \value{
-list contain mean in a n_iters_per_chain $x$ n_chains $x$ 2*n_params_model array and the ELBO of each sample in a n_iters_per_chain x n_chains array.
+list contain mean in a n_iters_per_chain by n_chains by 2*n_params_model array and the ELBO of each sample in a n_iters_per_chain by n_chains array.
 }
 \description{
 DE optimization for mean-field variational inference. Minimizes the KL divergence (maximizes the ELBO) between $q(theta|lambda)$ and the target posterior $p(theta|data)$ For a tutorial on variational inference check out Galdo, Bahg, & Turner 2020.
 }
 \examples{
 # simulate from model
-dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(.1, .1)), nrow = 50, ncol = 2, byrow = TRUE)
+dataExample <- matrix(stats::rnorm(100, c(-1, 1), c(1, 1)), nrow = 50, ncol = 2, byrow = TRUE)
 ## list parameter names
 param_names_example <- c("mu_1", "mu_2")
 

@@ -1,10 +1,10 @@
 #' DEMCMC
 #'
-#' @description Sample from Posterior using Differential Evolution Markov Chain Monte Carlo
-#' @param LogPostLike function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the paramemter vector.
-#' @param control_params control parameters for DEMCMC algo. see \code{\link{AlgoParamsDEMCMC}} function documentation for more details.
+#' @description Sample from posterior using Differential Evolution Markov Chain Monte Carlo
+#' @param LogPostLike function whose first argument is an n_params-dimensional model parameter vector and returns (scalar) sum of log prior density and log likelihood for the parameter vector.
+#' @param control_params control parameters for DEMCMC algorithm. see \code{\link{AlgoParamsDEMCMC}} function documentation for more details. You must specify 'n_params' here.
 #' @param ... additional arguments to pass LogPostLike
-#' @return list contain posterior samples from DEMCMC in a n_samples_per_chain by n_chains by n_params array and the log likelihood of each sample in a n_samples_per_chain by n_chains array.
+#' @return list contain posterior samples from DEMCMC in a 'n_samples_per_chain' by 'n_chains' by n_params array and the log posterior likelihood of each sample in a 'n_samples_per_chain' by 'n_chains' array.
 #' @export
 #' @md
 #' @examples
@@ -79,7 +79,7 @@ DEMCMC <- function(LogPostLike, control_params = AlgoParamsDEMCMC(), ...) {
 
     doParallel::registerDoParallel(control_params$n_cores_use)
     cl_use <- parallel::makeCluster(control_params$n_cores_use,
-      type = control_params$parallel_type
+                                    type = control_params$parallel_type
     )
   }
 
@@ -89,24 +89,24 @@ DEMCMC <- function(LogPostLike, control_params = AlgoParamsDEMCMC(), ...) {
     if (control_params$parallel_type == "none") {
       # cross over step
       temp <- matrix(unlist(lapply(1:control_params$n_chains, CrossoverMC,
-        param_indices = 1:control_params$n_params,
-        current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
-        current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
-        LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-        step_size = control_params$step_size,
-        jitter_size = control_params$jitter_size,
-        n_chains = control_params$n_chains, ...
-      )), control_params$n_chains, control_params$n_params + 1, byrow = T)
+                                   param_indices = 1:control_params$n_params,
+                                   current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+                                   current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+                                   LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+                                   step_size = control_params$step_size,
+                                   jitter_size = control_params$jitter_size,
+                                   n_chains = control_params$n_chains, ...
+      )), control_params$n_chains, control_params$n_params + 1, byrow = TRUE)
     } else {
       temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, CrossoverMC,
-        param_indices = 1:control_params$n_params,
-        current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
-        current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
-        LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-        step_size = control_params$step_size,
-        jitter_size = control_params$jitter_size,
-        n_chains = control_params$n_chains, ...
-      )), control_params$n_chains, control_params$n_params + 1, byrow = T)
+                                                  param_indices = 1:control_params$n_params,
+                                                  current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+                                                  current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+                                                  LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+                                                  step_size = control_params$step_size,
+                                                  jitter_size = control_params$jitter_size,
+                                                  n_chains = control_params$n_chains, ...
+      )), control_params$n_chains, control_params$n_params + 1, byrow = TRUE)
     }
     log_post_like[thetaIdx, ] <- temp[, 1]
     theta[thetaIdx, , ] <- temp[, 2:(control_params$n_params + 1)]
@@ -120,23 +120,29 @@ DEMCMC <- function(LogPostLike, control_params = AlgoParamsDEMCMC(), ...) {
     if (iter %% control_params$purify == 0) {
       if (control_params$parallel_type == "none") {
         # cross over step
-        temp <- matrix(unlist(lapply(1:control_params$n_chains, PurifyMC,
-          param_indices = 1:control_params$n_params,
-          current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
-          current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
-          LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-          n_chains = control_params$n_chains, ...
-        )), control_params$n_chains, control_params$n_params + 1, byrow = T)
+        temp <- matrix(unlist(lapply(1:control_params$n_chains,
+                                     PurifyMC,
+                                     param_indices = 1:control_params$n_params,
+                                     current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+                                     current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+                                     LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+                                     n_chains = control_params$n_chains, ...
+        )), control_params$n_chains,
+        control_params$n_params + 1,
+        byrow = TRUE)
       } else {
-        temp <- matrix(unlist(parallel::parLapplyLB(cl_use, 1:control_params$n_chains, PurifyMC,
-          param_indices = 1:control_params$n_params,
-          current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
-          current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
-          LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-          n_chains = control_params$n_chains, ...
+        temp <- matrix(unlist(parallel::parLapplyLB(cl_use,
+                                                    1:control_params$n_chains,
+                                                    PurifyMC,
+                                                    param_indices = 1:control_params$n_params,
+                                                    current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
+                                                    current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
+                                                    LogPostLike = LogPostLike, # log likelihood function (returns scalar)
+                                                    n_chains = control_params$n_chains, ...
         )),
-        control_params$n_chains, control_params$n_params + 1,
-        byrow = T
+        control_params$n_chains,
+        control_params$n_params + 1,
+        byrow = TRUE
         )
       }
       log_post_like[thetaIdx, ] <- temp[, 1]

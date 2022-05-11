@@ -9,7 +9,7 @@
 #' @param n_chains number of chains
 #' @param crossover_rate rate of updating parameters on a give crossover step (0=no parameters updated, 1=all parameters updated)
 #' @param control_params list of algorithm control parameters
-#' @param S number of samples for ELBO monte carlo estimate
+#' @param S number of samples for ELBO Monte Carlo estimate
 #' @param ... additional arguments for LogPostLike function
 #' @noRd
 
