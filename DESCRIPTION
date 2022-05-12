@@ -1,6 +1,6 @@
 Package: DEBBI
 Title: Differential Evolution-Based Bayesian Inference
-Version: 0.0.1
+Version: 0.1.0
 Authors@R: 
     person(given = "Brendan Matthew",
            family = "Galdo",
