@@ -63,7 +63,9 @@ post <- DEMCMC(LogPostLike=LogPostLikeExample,
                control_params=AlgoParamsDEMCMC(n_params=length(param_names_example),
                                                n_iter=500, 
                                                n_chains=12,
-                                               burnin=100),
+                                               burnin=100,
+                                            parallel_type = 'FORK',
+                                            n_cores_use = 4),
                data=dataExample,
                param_names = param_names_example)
 #> initalizing chains...
@@ -80,6 +82,7 @@ post <- DEMCMC(LogPostLike=LogPostLikeExample,
 #> 11 / 12
 #> 12 / 12
 #> chain initialization complete  :)
+#> initalizing FORK cluser with 4 cores
 #> running DEMCMC
 #> iter 100/500
 #> iter 200/500
@@ -114,32 +117,32 @@ abline(h=1,lwd=3)
 #### DEMCMC solution
 # posterior mean
 round(mean(post$samples[,,1]),3)
-#> [1] -1.092
-# posterior sd
+#> [1] -1.11
+# posterior var
 round(var(as.numeric(post$samples[,,1])),3)
-#> [1] 0.02
+#> [1] 0.022
 
 #### Analytic solution (conjugate posteriors)
 # posterior mean
 round(1/(1+50/1)*(sum(dataExample[,1])),3)
 #> [1] -1.101
-# posterior sd
+# posterior var
 round(1/(1+50/1),3)
 #> [1] 0.02
 
 #### mu_2
 # posterior mean  (conjugate posteriors)
 round(mean(post$samples[,,2]),3)
-#> [1] 0.871
-# posterior sd
+#> [1] 0.875
+# posterior var
 round(var(as.numeric(post$samples[,,2])),3)
-#> [1] 0.019
+#> [1] 0.02
 
 #### Analytic solution
 # posterior mean
 round(1/(1+50/1)*(sum(dataExample[,2])),3)
 #> [1] 0.876
-# posterior sd
+# posterior var
 round(1/(1+50/1),3)
 #> [1] 0.02
 ```
@@ -155,7 +158,10 @@ deviations using DE
 map <- DEMAP(LogPostLike=LogPostLikeExample,
              control_params=AlgoParamsDEMAP(n_params=length(param_names_example),
                                             n_iter=100, 
-                                            n_chains=12, return_trace = T),
+                                            n_chains=12, 
+                                            return_trace = T,
+                                            parallel_type = 'FORK',
+                                            n_cores_use = 4),
              data=dataExample,
              param_names = param_names_example)
 #> initalizing chains...
@@ -172,6 +178,7 @@ map <- DEMAP(LogPostLike=LogPostLikeExample,
 #> 11 / 12
 #> 12 / 12
 #> chain initialization complete  :)
+#> initalizing FORK cluser with 4 cores
 #> running DE to find MAP
 #> iter 100/100
 
@@ -234,7 +241,9 @@ vb <- DEVI(LogPostLike=LogPostLikeExample,
                                          use_QMC = F,
                                          n_samples_LRVB = 25,
                                          purify=10,
-                                         return_trace = T),
+                                         return_trace = T,
+                                            parallel_type = 'FORK',
+                                            n_cores_use = 4),
            data=dataExample,
            param_names = param_names_example)
 #> initalizing chains...
@@ -251,6 +260,7 @@ vb <- DEVI(LogPostLike=LogPostLikeExample,
 #> 11 / 12
 #> 12 / 12
 #> chain initialization complete  :)
+#> initalizing FORK cluser with 4 cores
 #> running DE to find best variational approximation
 #> iter 100/200
 #> iter 200/200
@@ -285,7 +295,7 @@ matplot(vb$ELBO_trace,type='l',ylab='ELBO',xlab="iteration",lwd=2)
 # posterior mean
 round(vb$means,3)
 #> param_1_mean param_2_mean 
-#>       -1.045        1.243
+#>        -0.97         0.92
 # posterior covariance
 round((vb$covariance),3)
 #>      [,1] [,2]

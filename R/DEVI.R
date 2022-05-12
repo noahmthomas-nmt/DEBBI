@@ -124,7 +124,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
         jitter_size = control_params$jitter_size,
         n_chains = control_params$n_chains,
         crossover_rate = control_params$crossover_rate,
-        control_params,
+        control_params = control_params,
         S = control_params$n_samples_ELBO, ...
       )),
       control_params$n_chains,
@@ -161,7 +161,7 @@ DEVI <- function(LogPostLike, control_params = AlgoParamsDEVI(), ...) {
           current_params = lambda[lambdaIdx, , ], # current parameter values for chain (numeric vector)
           current_weight = ELBO_values[lambdaIdx, ], # corresponding log like for (numeric vector)
           LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-          control_params,
+          control_params = control_params,
           S = control_params$n_samples_ELBO, ...
         )),
         control_params$n_chains,
