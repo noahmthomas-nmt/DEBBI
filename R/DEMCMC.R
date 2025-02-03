@@ -122,11 +122,11 @@ DEMCMC <- function(LogPostLike, control_params = AlgoParamsDEMCMC(), ...) {
         # cross over step
         temp <- matrix(unlist(lapply(1:control_params$n_chains,
                                      PurifyMC,
-                                     param_indices = 1:control_params$n_params,
+                                     # param_indices = 1:control_params$n_params,
                                      current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
                                      current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
-                                     LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-                                     n_chains = control_params$n_chains, ...
+                                     LogPostLike = LogPostLike, ... # log likelihood function (returns scalar)
+                                     # n_chains = control_params$n_chains,
         )), control_params$n_chains,
         control_params$n_params + 1,
         byrow = TRUE)
@@ -134,11 +134,11 @@ DEMCMC <- function(LogPostLike, control_params = AlgoParamsDEMCMC(), ...) {
         temp <- matrix(unlist(parallel::parLapplyLB(cl_use,
                                                     1:control_params$n_chains,
                                                     PurifyMC,
-                                                    param_indices = 1:control_params$n_params,
+                                                    # param_indices = 1:control_params$n_params,
                                                     current_theta = theta[thetaIdx, , ], # current parameter values for chain (numeric vector)
                                                     current_log_post_like = log_post_like[thetaIdx, ], # corresponding log like for (numeric vector)
-                                                    LogPostLike = LogPostLike, # log likelihood function (returns scalar)
-                                                    n_chains = control_params$n_chains, ...
+                                                    LogPostLike = LogPostLike, ... # log likelihood function (returns scalar)
+                                                    # n_chains = control_params$n_chains,
         )),
         control_params$n_chains,
         control_params$n_params + 1,

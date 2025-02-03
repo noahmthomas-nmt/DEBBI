@@ -12,6 +12,7 @@
 #' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
 #' @param burnin number of initial iterations to discard. Default value is 0.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.
+#' @param purify positive integer, every 'purify'-th posterior draw will be re-evaluated. Default value is Inf.
 #' @return list of control parameters for the DEMCMC function
 #' @export
 
@@ -26,7 +27,9 @@ AlgoParamsDEMCMC <- function(n_params,
                              jitter_size = 1e-6,
                              parallel_type = "none",
                              burnin = 0,
-                             thin = 1) {
+                             thin = 1,
+                             purify = NULL
+                             ) {
   # n_params
   ### catch errors
   n_params <- as.integer(n_params)
@@ -178,11 +181,16 @@ AlgoParamsDEMCMC <- function(n_params,
   }
 
   # purify
-  n_samples_per_chain <- floor((n_iter - burnin) / thin)
-  ### catch errors
-  if (n_samples_per_chain < 1 | (!is.finite(n_samples_per_chain))) {
-    stop("ERROR: number of samples per chain is negative or non finite.
-         n_samples_per_chain=floor((n_iter-burnin)/thin)")
+  if (is.null(purify)) {
+    purify <- Inf
+  }else {
+    ### catch errors
+    purify <- as.integer(purify)
+    if (any(!is.finite(purify))) {
+      stop("ERROR: purify is not finite")
+    } else if (any(purify < 1) | length(purify) > 1) {
+      stop("ERROR: purify must be a scalar postive integer")
+    }
   }
 
 
@@ -198,7 +206,7 @@ AlgoParamsDEMCMC <- function(n_params,
     "parallel_type" = parallel_type,
     "burnin" = burnin,
     "thin" = thin,
-    "purify" = Inf,
+    "purify" = purify,
     "n_samples_per_chain" = n_samples_per_chain,
     "param_names" = param_names
   )

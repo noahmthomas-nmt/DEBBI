@@ -16,7 +16,8 @@ AlgoParamsDEMCMC(
   jitter_size = 1e-06,
   parallel_type = "none",
   burnin = 0,
-  thin = 1
+  thin = 1,
+  purify = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ AlgoParamsDEMCMC(
 \item{burnin}{number of initial iterations to discard. Default value is 0.}
 
 \item{thin}{positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.}
+
+\item{purify}{positive integer, every 'purify'-th posterior draw will be re-evaluated. Default value is Inf.}
 }
 \value{
 list of control parameters for the DEMCMC function

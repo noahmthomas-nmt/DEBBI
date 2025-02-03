@@ -16,7 +16,8 @@ AlgoParamsDEMAP(
   crossover_rate = 1,
   parallel_type = "none",
   return_trace = FALSE,
-  thin = 1
+  thin = 1,
+  purify = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ AlgoParamsDEMAP(
 \item{return_trace}{logical, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.}
 
 \item{thin}{positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.}
+
+\item{purify}{positive integer, every 'purify'-th posterior draw will be re-evaluated. Default value is Inf.}
 }
 \value{
 list of control parameters for the DEMAP function

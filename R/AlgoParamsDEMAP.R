@@ -12,6 +12,7 @@
 #' @param parallel_type string specifying parallelization type. 'none','FORK', or 'PSOCK' are valid values. 'none' is default value.
 #' @param return_trace logical, if true, function returns particle trajectories. This is helpful for diagnosing convergence or debugging model code. Function will return an iteration/thin $x$ n_chains $x$ n_params array and the estimated ELBO of each particle in a iteration/thin x n_chains array.
 #' @param thin positive integer, only every 'thin'-th iteration will be stored. Default value is 1. Increasing thin will reduce the memory required, while running chains for longer.
+#' @param purify positive integer, every 'purify'-th posterior draw will be re-evaluated. Default value is Inf.
 #' @return list of control parameters for the DEMAP function
 #' @export
 
@@ -26,7 +27,8 @@ AlgoParamsDEMAP <- function(n_params,
                             crossover_rate = 1,
                             parallel_type = "none",
                             return_trace = FALSE,
-                            thin = 1) {
+                            thin = 1,
+                            purify = NULL) {
   # n_params
   ### catch errors
   n_params <- as.integer(n_params)
@@ -172,11 +174,16 @@ AlgoParamsDEMAP <- function(n_params,
   }
 
   # purify
-  n_iters_per_chain <- floor((n_iter) / thin)
-  ### catch errors
-  if (n_iters_per_chain < 1 | (!is.finite(n_iters_per_chain))) {
-    stop("ERROR: number of samples per chain is negative or non finite.
-         n_iters_per_chain=floor((n_iter-burnin)/thin)")
+  if (is.null(purify)) {
+    purify <- Inf
+  }else {
+    ### catch errors
+    purify <- as.integer(purify)
+    if (any(!is.finite(purify))) {
+      stop("ERROR: purify is not finite")
+    } else if (any(purify < 1) | length(purify) > 1) {
+      stop("ERROR: purify must be a scalar postive integer")
+    }
   }
 
 
@@ -192,7 +199,7 @@ AlgoParamsDEMAP <- function(n_params,
     "jitter_size" = jitter_size,
     "parallel_type" = parallel_type,
     "thin" = thin,
-    "purify" = Inf,
+    "purify" = purify,
     "n_iters_per_chain" = n_iters_per_chain,
     "return_trace" = return_trace
   )
